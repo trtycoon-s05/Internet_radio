@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTERNET RADIO</title>
+    <!-- Підключаємо скрипт Telegram -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1c1c1c; color: #00FF00; text-align: center; padding: 20px; margin: 0; user-select: none; }
+        .screen { background-color: black; padding: 15px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; border: 1px solid #333; letter-spacing: 1px; }
+        .btn-stop { background-color: #2d2d2d; color: red; border: 1px solid red; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; max-width: 200px; font-size: 16px; margin-bottom: 10px; }
+        .vol-box { margin: 20px 0; }
+        .vol-box input { width: 80%; max-width: 300px; }
+        .playlist { background-color: black; border-radius: 6px; padding: 10px; max-height: 50vh; overflow-y: auto; text-align: left; border: 1px solid #222; }
+        .station-item { padding: 14px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .station-item:hover { background-color: #2d2d2d; }
+    </style>
+</head>
+<body>
+
+    <div class="screen" id="status">ОБЕРІТЬ СТАНЦІЮ</div>
+    
+    <button class="btn-stop" id="stop-btn">■ СТОП</button>
+
+    <div class="vol-box">
+        <label>ГУЧНІСТЬ:</label><br>
+        <input type="range" id="volume-slider" min="0" max="100" value="70">
+    </div>
+
+    <h3>СПИСОК РАДІОСТАНЦІЙ:</h3>
+    
+    <div class="playlist" id="playlist">
+        <div class="station-item" data-stream="https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" data-name="Радіо ЗАБАВА"><span>Радіо ЗАБАВА</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" data-name="Радіо Люкс ФМ"><span>Радіо Люкс ФМ</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://icecast.luxnet.ua/chill-sd" data-name="Радіо Люкс ФМ - релакс"><span>Радіо Люкс ФМ - релакс</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1" data-name="Радіо Люкс ФМ - укрхіти"><span>Радіо Люкс ФМ - укрхіти</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1" data-name="Радіо Люкс ФМ - хіти"><span>Радіо Люкс ФМ - хіти</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1" data-name="Радіо Люкс ФМ - спорт"><span>Радіо Люкс ФМ - спорт</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://radio.perec.fm/radio-stilnoe" data-name="Радіо Перець ФМ"><span>Радіо Перець ФМ</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1" data-name="Радіо Максимум"><span>Радіо Максимум</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://tavr.tvstitch.com/HitFM?npa=1" data-name="ХІТ ФМ"><span>ХІТ ФМ</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://cast.mediaonline.net.ua/avtoradio" data-name="Авторадіо"><span>Авторадіо</span> <span>▶</span></div>
+        <div class="station-item" data-stream="https://s5.radioforge.com:7908/live?npa=1" data-name="Радіо Європа +"><span>Радіо Європа +</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://lux.radio.tvstitch.com/dance-fm-sd?npa=1" data-name="Радіо Dance FM"><span>Радіо Dance FM</span> <span>▶</span></div>
+		<div class="station-item" data-stream="https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" data-name="Радіо FITNESS FM"><span>Радіо FITNESS FM</span> <span>▶</span></div>
+	</div>
+
+    <audio id="audio-player" preload="none" crossorigin="anonymous"></audio>
+
+    <script>
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.expand();
+                window.Telegram.WebApp.ready();
+            }
+        } catch(e) {}
+
+        const player = document.getElementById('audio-player');
+        const statusText = document.getElementById('status');
+        const volumeSlider = document.getElementById('volume-slider');
+        const stopButton = document.getElementById('stop-btn');
+
+        player.volume = volumeSlider.value / 100;
+
+        volumeSlider.oninput = function() {
+            player.volume = this.value / 100;
+        };
+
+        document.querySelectorAll('.station-item').forEach(item => {
+            item.onclick = function() {
+                let streamUrl = this.getAttribute('data-stream');
+                const stationName = this.getAttribute('data-name');
+                
+                statusText.innerText = "ПІДКЛЮЧЕННЯ...";
+                
+                player.pause();
+                
+                // Якщо потік незахищений (http://), пускаємо його через зворотний SSL-проксі для обходу блокувань Telegram
+                if (streamUrl.startsWith('http://')) {
+                    streamUrl = 'https://herokuapp.com' + streamUrl;
+                }
+                
+                player.src = streamUrl;
+                player.load();
+                
+                player.play()
+                    .then(() => {
+                        statusText.innerText = "ГРАЄ: " + stationName.toUpperCase();
+                    })
+                    .catch(error => {
+                        statusText.innerText = "ПОМИЛКА БЛОКУВАННЯ ПОТОКУ";
+                        console.log(error);
+                    });
+            };
+        });
+
+        stopButton.onclick = function() {
+            player.pause();
+            player.src = "";
+            statusText.innerText = "ЗУПИНЕНО";
+        };
+    </script>
+</body>
+</html>

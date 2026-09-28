@@ -49,21 +49,36 @@
             word-break: break-word;
         }
 
+        /* Кнопки керування відтворенням */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn-ctrl {
+            background-color: #1e1e1e;
+            color: #00ff88;
+            border: 1px solid #00ff8866;
+            padding: 12px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .btn-ctrl:active {
+            transform: scale(0.96);
+            background-color: #252525;
+        }
+
         .btn-stop {
             background-color: #2a1113;
             color: #ff4d4d;
             border: 1px solid #ff4d4d66;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            font-size: 15px;
-            margin-bottom: 16px;
-            transition: all 0.2s ease;
         }
         .btn-stop:active {
-            transform: scale(0.98);
             background-color: #3d171a;
         }
 
@@ -104,7 +119,8 @@
             overflow-y: auto;
             text-align: left;
             border: 1px solid #282828;
-            max-height: 55vh;
+            max-height: 40vh;
+            margin-bottom: 20px;
         }
 
         .station-item {
@@ -129,12 +145,65 @@
             color: #00ff88;
             font-weight: bold;
         }
+        .station-item .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         .station-item .icon {
             font-size: 12px;
             opacity: 0.6;
         }
         .station-item.active .icon {
             opacity: 1;
+        }
+        .btn-del {
+            color: #ff4d4d;
+            font-size: 14px;
+            opacity: 0.5;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .btn-del:hover {
+            opacity: 1;
+            background: #ff4d4d22;
+        }
+
+        /* Форма додавання власної станції */
+        .add-box {
+            background: #181818;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #282828;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .add-box input {
+            background: #101010;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .add-box input:focus {
+            border-color: #00ff88;
+        }
+        .btn-add {
+            background-color: #00ff8822;
+            color: #00ff88;
+            border: 1px solid #00ff8866;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-add:active {
+            background-color: #00ff8844;
         }
     </style>
 </head>
@@ -143,7 +212,12 @@
     <div class="container">
         <div class="screen" id="status">ОБЕРІТЬ СТАНЦІЮ</div>
         
-        <button class="btn-stop" id="stop-btn">■ СТОП</button>
+        <!-- Керування програвачем -->
+        <div class="controls-grid">
+            <button class="btn-ctrl" id="prev-btn">⏮ НАЗАД</button>
+            <button class="btn-ctrl btn-stop" id="stop-btn">■ СТОП</button>
+            <button class="btn-ctrl" id="next-btn">ВПЕРЕД ⏭</button>
+        </div>
 
         <div class="vol-box">
             <label>ГУЧНІСТЬ</label>
@@ -152,32 +226,48 @@
 
         <h3>Список радіостанцій</h3>
         
-        <div class="playlist" id="playlist">
-            <div class="station-item" data-stream="https://cast.radiotrek.rv.ua:8433/AAC%2B_64" data-name="Радіо ТРЕК"><span>Радіо ТРЕК</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" data-name="Радіо ЗАБАВА"><span>Радіо ЗАБАВА</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" data-name="Радіо Люкс ФМ"><span>Радіо Люкс ФМ</span> <span class="icon">▶</span></div>
-			<div class="station-item" data-stream="https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1" data-name="Радіо Люкс ФМ - Romantic"><span>Радіо Люкс ФМ - Romantic</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://icecast.luxnet.ua/chill-sd" data-name="Радіо Люкс ФМ - Chill & Relax"><span>Радіо Люкс ФМ - Chill & Relax</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1" data-name="Радіо Люкс ФМ - Українські хіти"><span>Радіо Люкс ФМ - Українські хіти</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/lux-fm-dance-sd?npa=1" data-name="Радіо Люкс ФМ - DANCE"><span>Радіо Люкс ФМ - DANCE</span> <span class="icon">▶</span></div>
-			<div class="station-item" data-stream="https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1" data-name="Радіо Люкс ФМ - Золоті хіти"><span>Радіо Люкс ФМ - Золоті хіти</span> <span class="icon">▶</span></div>
-			<div class="station-item" data-stream="https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1" data-name="Радіо Люкс ФМ - Сучасні хіти"><span>Радіо Люкс ФМ - Сучасні хіти</span> <span class="icon">▶</span></div>
-			<div class="station-item" data-stream="https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1" data-name="Радіо Люкс ФМ - Тільки люкс хіти"><span>Радіо Люкс ФМ - Тільки люкс хіти</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1" data-name="Радіо Люкс ФМ - SPORT"><span>Радіо Люкс ФМ - SPORT</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://radio.perec.fm/radio-stilnoe" data-name="Радіо Перець ФМ"><span>Радіо Перець ФМ</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1" data-name="Радіо Максимум"><span>Радіо Максимум</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://tavr.tvstitch.com/HitFM?npa=1" data-name="ХІТ ФМ"><span>ХІТ ФМ</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://cast.mediaonline.net.ua/avtoradio" data-name="Авторадіо"><span>Авторадіо</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://s5.radioforge.com:7908/live?npa=1" data-name="Радіо Європа +"><span>Радіо Європа +</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/dance-fm-sd?npa=1" data-name="Радіо Dance FM"><span>Радіо Dance FM</span> <span class="icon">▶</span></div>
-            <div class="station-item" data-stream="https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" data-name="Радіо FITNESS FM"><span>Радіо FITNESS FM</span> <span class="icon">▶</span></div>
+        <!-- Список радіостанцій -->
+        <div class="playlist" id="playlist"></div>
+
+        <!-- Додавання власної станції (перенесено під список) -->
+        <h3>Додати станцію</h3>
+        <div class="add-box">
+            <input type="text" id="custom-name" placeholder="Назва станції">
+            <input type="url" id="custom-url" placeholder="URL потоку (https://...)">
+            <button class="btn-add" id="add-btn">+ ДОДАТИ СТАНЦІЮ</button>
         </div>
     </div>
 
-    <!-- Тег audio без attribute crossorigin="anonymous" для уникнення CORS-помилок -->
+    <!-- Тег audio без атрибута crossorigin="anonymous" для уникнення CORS-помилок -->
     <audio id="audio-player" preload="none"></audio>
 
     <script>
+        // Початковий список станцій за замовчуванням
+        const defaultStations = [
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/AAC%2B_64" },
+            { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
+            { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
+            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd" },
+            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/lux-fm-dance-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1" },
+            { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1" },
+            { name: "Радіо Перець ФМ", stream: "https://radio.perec.fm/radio-stilnoe" },
+            { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1" },
+            { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1" },
+            { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio" },
+            { name: "Радіо Європа +", stream: "https://s5.radioforge.com:7908/live?npa=1" },
+            { name: "Радіо Dance FM", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1" },
+            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" }
+        ];
+
+        // Завантаження користувацьких станцій з localStorage
+        let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
+        let currentIndex = -1; // -1 означає, що нічого не відтворюється
+
         // Ініціалізація Telegram WebApp
         try {
             if (window.Telegram && window.Telegram.WebApp) {
@@ -190,7 +280,12 @@
         const statusText = document.getElementById('status');
         const volumeSlider = document.getElementById('volume-slider');
         const stopButton = document.getElementById('stop-btn');
-        const stationItems = document.querySelectorAll('.station-item');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+        const playlistContainer = document.getElementById('playlist');
+        const addBtn = document.getElementById('add-btn');
+        const customNameInput = document.getElementById('custom-name');
+        const customUrlInput = document.getElementById('custom-url');
 
         // Встановлення початкової гучності
         player.volume = volumeSlider.value / 100;
@@ -199,48 +294,145 @@
             player.volume = this.value / 100;
         });
 
-        stationItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const streamUrl = this.getAttribute('data-stream');
-                const stationName = this.getAttribute('data-name');
+        // Отримання всіх станцій (за замовчуванням + додані користувачем)
+        function getAllStations() {
+            return [...defaultStations, ...customStations];
+        }
 
-                // Підсвічуємо активний елемент списку
-                stationItems.forEach(el => {
-                    el.classList.remove('active');
-                    el.querySelector('.icon').innerText = '▶';
+        // Відображення списку станцій
+        function renderPlaylist() {
+            playlistContainer.innerHTML = '';
+            const allStations = getAllStations();
+
+            allStations.forEach((station, index) => {
+                const item = document.createElement('div');
+                item.className = 'station-item' + (index === currentIndex ? ' active' : '');
+                
+                const isCustom = index >= defaultStations.length;
+                const deleteBtnHtml = isCustom ? `<span class="btn-del" data-custom-index="${index - defaultStations.length}">✖</span>` : '';
+
+                item.innerHTML = `
+                    <span>${station.name}</span>
+                    <div class="actions">
+                        ${deleteBtnHtml}
+                        <span class="icon">${index === currentIndex ? '🔊' : '▶'}</span>
+                    </div>
+                `;
+
+                // Клік по станції для відтворення
+                item.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-del')) return;
+                    playStation(index);
                 });
-                this.classList.add('active');
-                this.querySelector('.icon').innerText = '🔊';
 
-                statusText.innerText = "ПІДКЛЮЧЕННЯ...";
-
-                player.pause();
-                player.src = streamUrl;
-                player.load();
-
-                player.play()
-                    .then(() => {
-                        statusText.innerText = "ГРАЄ: " + stationName.toUpperCase();
-                    })
-                    .catch(error => {
-                        statusText.innerText = "ПОМИЛКА ПОТОКУ";
-                        this.classList.remove('active');
-                        this.querySelector('.icon').innerText = '▶';
-                        console.error("Помилка відтворення:", error);
+                // Клік по кнопці видалення користувацької станції
+                if (isCustom) {
+                    const delBtn = item.querySelector('.btn-del');
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteCustomStation(index - defaultStations.length);
                     });
+                }
+
+                playlistContainer.appendChild(item);
             });
+        }
+
+        // Функція відтворення за індексом
+        function playStation(index) {
+            const allStations = getAllStations();
+            if (index < 0 || index >= allStations.length) return;
+
+            currentIndex = index;
+            const station = allStations[currentIndex];
+
+            renderPlaylist();
+            statusText.innerText = "ПІДКЛЮЧЕННЯ...";
+
+            player.pause();
+            player.src = station.stream;
+            player.load();
+
+            player.play()
+                .then(() => {
+                    statusText.innerText = "ГРАЄ: " + station.name.toUpperCase();
+                })
+                .catch(error => {
+                    statusText.innerText = "ПОМИЛКА ПОТОКУ";
+                    renderPlaylist();
+                    console.error("Помилка відтворення:", error);
+                });
+        }
+
+        // Переключення на попередню станцію (по колу)
+        prevButton.addEventListener('click', function() {
+            const allStations = getAllStations();
+            if (allStations.length === 0) return;
+            
+            let newIndex = currentIndex - 1;
+            if (newIndex < 0) {
+                newIndex = allStations.length - 1;
+            }
+            playStation(newIndex);
         });
 
+        // Переключення на наступну станцію (по колу)
+        nextButton.addEventListener('click', function() {
+            const allStations = getAllStations();
+            if (allStations.length === 0) return;
+
+            let newIndex = currentIndex + 1;
+            if (newIndex >= allStations.length) {
+                newIndex = 0;
+            }
+            playStation(newIndex);
+        });
+
+        // Зупинка відтворення
         stopButton.addEventListener('click', function() {
             player.pause();
             player.src = "";
+            currentIndex = -1;
             statusText.innerText = "ЗУПИНЕНО";
-            
-            stationItems.forEach(el => {
-                el.classList.remove('active');
-                el.querySelector('.icon').innerText = '▶';
-            });
+            renderPlaylist();
         });
+
+        // Додавання власної станції користувачем
+        addBtn.addEventListener('click', function() {
+            const name = customNameInput.value.trim();
+            const stream = customUrlInput.value.trim();
+
+            if (!name || !stream) {
+                alert("Будь ласка, введіть назву та URL потоку.");
+                return;
+            }
+
+            customStations.push({ name, stream });
+            localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
+
+            customNameInput.value = '';
+            customUrlInput.value = '';
+
+            renderPlaylist();
+        });
+
+        // Видалення користувацької станції
+        function deleteCustomStation(customIndex) {
+            const actualIndex = defaultStations.length + customIndex;
+            
+            if (currentIndex === actualIndex) {
+                stopButton.click();
+            } else if (currentIndex > actualIndex) {
+                currentIndex--;
+            }
+
+            customStations.splice(customIndex, 1);
+            localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
+            renderPlaylist();
+        }
+
+        // Початкове відображення
+        renderPlaylist();
     </script>
 </body>
 </html>

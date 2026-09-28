@@ -229,7 +229,7 @@
         <!-- Список радіостанцій -->
         <div class="playlist" id="playlist"></div>
 
-        <!-- Додавання власної станції (перенесено під список) -->
+        <!-- Додавання власної станції -->
         <h3>Додати станцію</h3>
         <div class="add-box">
             <input type="text" id="custom-name" placeholder="Назва станції">
@@ -299,6 +299,35 @@
             return [...defaultStations, ...customStations];
         }
 
+        // Ініціалізація системних команд для iOS Lock Screen / Control Center / Apple Watch
+        function setupMediaSession() {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('play', () => {
+                    if (currentIndex !== -1) player.play();
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    player.pause();
+                });
+                navigator.mediaSession.setActionHandler('previoustrack', () => {
+                    playPrev();
+                });
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    playNext();
+                });
+            }
+        }
+
+        // Оновлення метаданих для заблокованого екрана iOS та Apple Watch
+        function updateMediaSessionMetadata(stationName) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: stationName,
+                    artist: 'Інтернет Радіо',
+                    album: 'Прямий ефір'
+                });
+            }
+        }
+
         // Відображення списку станцій
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
@@ -349,6 +378,9 @@
             renderPlaylist();
             statusText.innerText = "ПІДКЛЮЧЕННЯ...";
 
+            // Оновлюємо відображення на iOS та Apple Watch
+            updateMediaSessionMetadata(station.name);
+
             player.pause();
             player.src = station.stream;
             player.load();
@@ -364,8 +396,8 @@
                 });
         }
 
-        // Переключення на попередню станцію (по колу)
-        prevButton.addEventListener('click', function() {
+        // Функції переключення станцій
+        function playPrev() {
             const allStations = getAllStations();
             if (allStations.length === 0) return;
             
@@ -374,10 +406,9 @@
                 newIndex = allStations.length - 1;
             }
             playStation(newIndex);
-        });
+        }
 
-        // Переключення на наступну станцію (по колу)
-        nextButton.addEventListener('click', function() {
+        function playNext() {
             const allStations = getAllStations();
             if (allStations.length === 0) return;
 
@@ -386,7 +417,11 @@
                 newIndex = 0;
             }
             playStation(newIndex);
-        });
+        }
+
+        // Переключення кнопками сайту
+        prevButton.addEventListener('click', playPrev);
+        nextButton.addEventListener('click', playNext);
 
         // Зупинка відтворення
         stopButton.addEventListener('click', function() {
@@ -431,7 +466,8 @@
             renderPlaylist();
         }
 
-        // Початкове відображення
+        // Початкова ініціалізація
+        setupMediaSession();
         renderPlaylist();
     </script>
 </body>

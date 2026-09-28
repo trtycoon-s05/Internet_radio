@@ -302,22 +302,30 @@
         // Ініціалізація системних команд для iOS Lock Screen / Control Center / Apple Watch
         function setupMediaSession() {
             if ('mediaSession' in navigator) {
+                // Вимикаємо стандартні кнопки перемотування (10 сек), якщо вони підхопилися
+                try {
+                    navigator.mediaSession.setActionHandler('seekbackward', null);
+                    navigator.mediaSession.setActionHandler('seekforward', null);
+                } catch(e) {}
+
+                // Призначаємо обробники для перемикання треків
+                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                navigator.mediaSession.setActionHandler('nexttrack', playNext);
+                
+                // Якщо система все одно показує кнопки перемотування — перенаправляємо їх дію на перемикання станцій
+                navigator.mediaSession.setActionHandler('seekbackward', playPrev);
+                navigator.mediaSession.setActionHandler('seekforward', playNext);
+
                 navigator.mediaSession.setActionHandler('play', () => {
                     if (currentIndex !== -1) player.play();
                 });
                 navigator.mediaSession.setActionHandler('pause', () => {
                     player.pause();
                 });
-                navigator.mediaSession.setActionHandler('previoustrack', () => {
-                    playPrev();
-                });
-                navigator.mediaSession.setActionHandler('nexttrack', () => {
-                    playNext();
-                });
             }
         }
 
-        // Оновлення метаданих для заблокованого екрана iOS та Apple Watch
+        // Оновлення метаданих та стану відтворення для системного плеєра iOS
         function updateMediaSessionMetadata(stationName) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -325,6 +333,13 @@
                     artist: 'Інтернет Радіо',
                     album: 'Прямий ефір'
                 });
+
+                // Вказуємо системі, що це лінійний потік (без фіксованої тривалості)
+                if ('setPositionState' in navigator.mediaSession) {
+                    try {
+                        navigator.mediaSession.setPositionState();
+                    } catch(e) {}
+                }
             }
         }
 
@@ -378,7 +393,7 @@
             renderPlaylist();
             statusText.innerText = "ПІДКЛЮЧЕННЯ...";
 
-            // Оновлюємо відображення на iOS та Apple Watch
+            // Оновлюємо метадані для iOS / Apple Watch
             updateMediaSessionMetadata(station.name);
 
             player.pause();
@@ -388,6 +403,7 @@
             player.play()
                 .then(() => {
                     statusText.innerText = "ГРАЄ: " + station.name.toUpperCase();
+                    setupMediaSession(); // Повторна фіксація обробників після початку відтворення
                 })
                 .catch(error => {
                     statusText.innerText = "ПОМИЛКА ПОТОКУ";

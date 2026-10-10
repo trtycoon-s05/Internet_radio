@@ -388,15 +388,16 @@
         }
 
         .station-item {
-            padding: 12px 14px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: var(--text-main);
-            font-size: 14px;
+            font-size: 13px;
             transition: background 0.15s;
+            gap: 8px;
         }
         .station-item:last-child {
             border-bottom: none;
@@ -407,10 +408,31 @@
             font-weight: bold;
         }
 
+        .station-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .station-item .actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-move {
+            background: var(--bg-input);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-move:active {
+            transform: scale(0.9);
         }
 
         .btn-fav {
@@ -426,8 +448,9 @@
         .btn-del {
             color: var(--btn-stop-color);
             font-size: 13px;
-            opacity: 0.5;
+            opacity: 0.6;
             padding: 2px 4px;
+            cursor: pointer;
         }
 
         .add-box {
@@ -595,7 +618,7 @@
         }
 
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://audio.radiotrek.rv.ua" },
+            { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq" },
             { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
@@ -615,8 +638,29 @@
             { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" }
         ];
 
+        // Завантаження збереженого порядку або дефолтного масиву
+        let savedPlaylist = localStorage.getItem('radio_stations_order');
+        let stationsList = savedPlaylist ? JSON.parse(savedPlaylist) : [...defaultStations];
+
         let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
         let favorites = JSON.parse(localStorage.getItem('fav_radio_stations')) || [];
+        
+        // Гарантуємо, що нові станції з дефолту чи кастомні теж присутні у списку
+        defaultStations.forEach(def => {
+            if (!stationsList.some(s => s.stream === def.stream)) {
+                stationsList.push(def);
+            }
+        });
+        customStations.forEach(cust => {
+            if (!stationsList.some(s => s.stream === cust.stream)) {
+                stationsList.push(cust);
+            }
+        });
+
+        function saveStationsOrder() {
+            localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+        }
+
         let currentIndex = -1;
 
         let audioCtx = null;
@@ -873,17 +917,6 @@
             bandPeaks.fill(120);
         }
 
-        function getAllStations() {
-            const all = [...defaultStations, ...customStations];
-            return all.sort((a, b) => {
-                const isAFav = favorites.includes(a.stream);
-                const isBFav = favorites.includes(b.stream);
-                if (isAFav && !isBFav) return -1;
-                if (!isAFav && isBFav) return 1;
-                return 0;
-            });
-        }
-
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -911,11 +944,30 @@
             renderPlaylist();
         }
 
+        function moveStation(index, direction, event) {
+            event.stopPropagation();
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= stationsList.length) return;
+
+            // Якщо поточна відтворювана станція рухається — оновлюємо її індекс
+            const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
+
+            const temp = stationsList[index];
+            stationsList[index] = stationsList[newIndex];
+            stationsList[newIndex] = temp;
+
+            if (activeStream) {
+                currentIndex = stationsList.findIndex(s => s.stream === activeStream);
+            }
+
+            saveStationsOrder();
+            renderPlaylist();
+        }
+
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
-            const stations = getAllStations();
 
-            stations.forEach((station, index) => {
+            stationsList.forEach((station, index) => {
                 const item = document.createElement('div');
                 item.className = 'station-item' + (index === currentIndex ? ' active' : '');
 
@@ -923,10 +975,14 @@
                 const isCustom = customStations.some(s => s.stream === station.stream);
 
                 item.innerHTML = `
-                    <span>${station.name}</span>
+                    <div class="actions" style="gap: 4px;">
+                        <button class="btn-move" title="Вгору" onclick="moveStationHandler(${index}, -1, event)">▲</button>
+                        <button class="btn-move" title="Вниз" onclick="moveStationHandler(${index}, 1, event)">▼</button>
+                    </div>
+                    <span class="station-name">${station.name}</span>
                     <div class="actions">
                         <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
-                        ${isCustom ? `<span class="btn-del">✖</span>` : ''}
+                        ${isCustom ? `<span class="btn-del" title="Видалити">✖</span>` : ''}
                         <span style="font-size: 12px; opacity: 0.6;">${index === currentIndex ? '🔊' : '▶'}</span>
                     </div>
                 `;
@@ -945,12 +1001,16 @@
             });
         }
 
+        // Глобальний обгортковий метод для кнопок стрілочок
+        window.moveStationHandler = function(index, direction, event) {
+            moveStation(index, direction, event);
+        };
+
         function playStation(index) {
-            const stations = getAllStations();
-            if (index < 0 || index >= stations.length) return;
+            if (index < 0 || index >= stationsList.length) return;
 
             currentIndex = index;
-            const station = stations[currentIndex];
+            const station = stationsList[currentIndex];
 
             renderPlaylist();
             statusText.innerText = "ПІДКЛЮЧЕННЯ...";
@@ -986,16 +1046,14 @@
         }
 
         function playPrev() {
-            const stations = getAllStations();
-            if (!stations.length) return;
-            let newIndex = currentIndex - 1 < 0 ? stations.length - 1 : currentIndex - 1;
+            if (!stationsList.length) return;
+            let newIndex = currentIndex - 1 < 0 ? stationsList.length - 1 : currentIndex - 1;
             playStation(newIndex);
         }
 
         function playNext() {
-            const stations = getAllStations();
-            if (!stations.length) return;
-            let newIndex = currentIndex + 1 >= stations.length ? 0 : currentIndex + 1;
+            if (!stationsList.length) return;
+            let newIndex = currentIndex + 1 >= stationsList.length ? 0 : currentIndex + 1;
             playStation(newIndex);
         }
 
@@ -1022,8 +1080,12 @@
                 return;
             }
 
-            customStations.push({ name, stream });
+            const newStation = { name, stream };
+            customStations.push(newStation);
+            stationsList.push(newStation);
+
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
+            saveStationsOrder();
 
             document.getElementById('custom-name').value = '';
             document.getElementById('custom-url').value = '';
@@ -1034,8 +1096,12 @@
 
         function deleteCustomStation(streamUrl) {
             customStations = customStations.filter(s => s.stream !== streamUrl);
+            stationsList = stationsList.filter(s => s.stream !== streamUrl);
+
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
-            if (currentIndex !== -1 && getAllStations()[currentIndex]?.stream === streamUrl) {
+            saveStationsOrder();
+
+            if (currentIndex !== -1 && stationsList[currentIndex]?.stream === streamUrl) {
                 stopButton.click();
             } else {
                 renderPlaylist();

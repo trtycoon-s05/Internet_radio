@@ -595,7 +595,7 @@
         }
 
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128.m3u" },
+            { name: "Радіо ТРЕК", stream: "https://audio.radiotrek.rv.ua" },
             { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
@@ -631,6 +631,7 @@
         let isPlaying = false;
         let prevHeights = new Array(NUM_BANDS).fill(4);
         let bandPeaks = new Array(NUM_BANDS).fill(120);
+        let randomTargets = new Array(NUM_BANDS).fill(20);
 
         const themeSelect = document.getElementById('theme-select');
         const savedTheme = localStorage.getItem('radio_skin') || 'cyberpunk';
@@ -811,7 +812,6 @@
             if (isWebAudioInitialized && analyser) {
                 freqData = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteFrequencyData(freqData);
-                // Перевіряємо, чи потік реально віддає дані (не всі нулі через CORS у Telegram)
                 hasRealData = freqData.some(val => val > 0);
             }
 
@@ -848,13 +848,13 @@
                     let normVal = Math.min(1.0, rawVal / bandPeaks[i]);
                     targetVal = Math.pow(normVal, 1.1) * 78 + 8;
                 } else {
-                    // 🛡 Надійний резервний генератор для мобільного Telegram (якщо CORS заблокував спектр)
-                    let fallbackTime = Date.now() / 110;
-                    let wave = Math.sin(fallbackTime + (i * 0.35)) * Math.cos(fallbackTime * 0.5);
-                    targetVal = Math.abs(wave) * 65 + 12;
+                    if (Math.random() < 0.25) {
+                        randomTargets[i] = Math.floor(Math.random() * 65) + 12;
+                    }
+                    targetVal = randomTargets[i];
                 }
 
-                let attackRelease = targetVal > prevHeights[i] ? 0.55 : 0.25;
+                let attackRelease = targetVal > prevHeights[i] ? 0.45 : 0.2;
                 prevHeights[i] += (targetVal - prevHeights[i]) * attackRelease;
                 
                 updateColumn(columns[i], Math.min(85, Math.max(5, prevHeights[i])));
@@ -1043,7 +1043,6 @@
             showToast("Станцію видалено");
         }
 
-        // Автоматична розблоковка аудіоконтексту по першому тапу в Telegram
         document.body.addEventListener('click', () => {
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();

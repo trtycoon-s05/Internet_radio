@@ -3,20 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Приховуємо Referer, щоб сервери не блокували запити з WebApp/локальних файлів -->
     <meta name="referrer" content="no-referrer">
-    <title>INTERNET RADIO</title>
-    <!-- Підключаємо Telegram WebApp SDK -->
+    <title>INTERNET RADIO PRO</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* 🎨 Скіни (Theme Variables) */
+        body[data-theme="cyberpunk"] {
+            --bg-main: #0d0d0d;
+            --bg-card: #141414;
+            --bg-input: #0a0a0a;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.25);
+            --accent-soft: rgba(0, 255, 136, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: #222222;
+            --btn-stop-bg: #2a1113;
+            --btn-stop-color: #ff4d4d;
+        }
+
+        body[data-theme="synthwave"] {
+            --bg-main: #1a0933;
+            --bg-card: #261245;
+            --bg-input: #120526;
+            --accent: #ff007f;
+            --accent-glow: rgba(255, 0, 127, 0.3);
+            --accent-soft: rgba(0, 240, 255, 0.15);
+            --text-main: #00f0ff;
+            --text-muted: #b182e6;
+            --border-color: #ff007f55;
+            --btn-stop-bg: #4a0d2e;
+            --btn-stop-color: #ff55aa;
+        }
+
+        body[data-theme="oled"] {
+            --bg-main: #000000;
+            --bg-card: #080808;
+            --bg-input: #101010;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.25);
+            --accent-soft: rgba(59, 130, 246, 0.12);
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
+            --border-color: #1f2937;
+            --btn-stop-bg: #1f1315;
+            --btn-stop-color: #ef4444;
+        }
+
+        body[data-theme="retro"] {
+            --bg-main: #1c1917;
+            --bg-card: #292524;
+            --bg-input: #151413;
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.25);
+            --accent-soft: rgba(245, 158, 11, 0.12);
+            --text-main: #fef3c7;
+            --text-muted: #a8a29e;
+            --border-color: #44403c;
+            --btn-stop-bg: #321a18;
+            --btn-stop-color: #f87171;
+        }
+
+        body[data-theme="matrix"] {
+            --bg-main: #020d04;
+            --bg-card: #061a0a;
+            --bg-input: #010803;
+            --accent: #22c55e;
+            --accent-glow: rgba(34, 197, 94, 0.3);
+            --accent-soft: rgba(34, 197, 94, 0.12);
+            --text-main: #dcfce7;
+            --text-muted: #4ade80;
+            --border-color: #14532d;
+            --btn-stop-bg: #1c0d0d;
+            --btn-stop-color: #f87171;
+        }
+
+        body[data-theme="ocean"] {
+            --bg-main: #06101e;
+            --bg-card: #0c1c30;
+            --bg-input: #040a14;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.3);
+            --accent-soft: rgba(56, 189, 248, 0.12);
+            --text-main: #e0f2fe;
+            --text-muted: #7dd3fc;
+            --border-color: #0369a1;
+            --btn-stop-bg: #2a1113;
+            --btn-stop-color: #ff4d4d;
+        }
+
+        body[data-theme="sunset"] {
+            --bg-main: #1e111a;
+            --bg-card: #2e1a29;
+            --bg-input: #140a12;
+            --accent: #fb7185;
+            --accent-glow: rgba(251, 113, 133, 0.3);
+            --accent-soft: rgba(251, 113, 133, 0.12);
+            --text-main: #ffe4e6;
+            --text-muted: #fda4af;
+            --border-color: #881337;
+            --btn-stop-bg: #111a2e;
+            --btn-stop-color: #60a5fa;
+        }
+
+        body[data-theme="light"] {
+            --bg-main: #f3f4f6;
+            --bg-card: #ffffff;
+            --bg-input: #e5e7eb;
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.15);
+            --accent-soft: rgba(16, 185, 129, 0.1);
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --btn-stop-bg: #fee2e2;
+            --btn-stop-color: #ef4444;
+        }
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            color: #00ff88;
+            background-color: var(--bg-main);
+            color: var(--accent);
             text-align: center;
             padding: 16px;
             margin: 0;
@@ -24,6 +135,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .container {
@@ -32,187 +144,374 @@
             width: 100%;
         }
 
-        .screen {
-            background-color: #000;
-            padding: 18px 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            border: 1px solid #00ff8844;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
-            letter-spacing: 0.5px;
-            font-size: 15px;
-            min-height: 56px;
+        .skin-selector {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            word-break: break-word;
+            margin-bottom: 12px;
+            background: var(--bg-card);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .skin-selector label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .skin-selector select {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
         }
 
-        /* Кнопки керування відтворенням */
+        /* Екран плеєра */
+        .screen {
+            background: #000000;
+            padding: 14px 12px;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .station-title {
+            font-size: 13px;
+            word-break: break-word;
+            text-align: center;
+            letter-spacing: 1px;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .track-title {
+            font-size: 11px;
+            color: var(--accent);
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.5px;
+            min-height: 14px;
+        }
+
+        /* Панель спектра */
+        .spectrum-panel {
+            background: #030303;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: center;
+        }
+
+        .spectrum-bars {
+            display: flex;
+            flex: 1;
+            gap: 2px;
+            height: 75px;
+        }
+
+        .spectrum-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 1px;
+            background: #060606;
+            padding: 1px;
+            border-radius: 1px;
+        }
+
+        .spectrum-block {
+            flex: 1;
+            background-color: #101010;
+            border-radius: 0.5px;
+            transition: background-color 0.02s ease, box-shadow 0.02s ease;
+        }
+
+        /* 🎨 Кольорові зони */
+        .spectrum-col.band-bass .spectrum-block.active {
+            background-color: #ff3b30;
+            box-shadow: 0 0 4px rgba(255, 59, 48, 0.7);
+        }
+        .spectrum-col.band-lowmid .spectrum-block.active {
+            background-color: #ffcc00;
+            box-shadow: 0 0 4px rgba(255, 204, 0, 0.7);
+        }
+        .spectrum-col.band-mid .spectrum-block.active {
+            background-color: #34c759;
+            box-shadow: 0 0 4px rgba(52, 199, 89, 0.7);
+        }
+        .spectrum-col.band-highmid .spectrum-block.active {
+            background-color: #007aff;
+            box-shadow: 0 0 4px rgba(0, 122, 255, 0.7);
+        }
+        .spectrum-col.band-treble .spectrum-block.active {
+            background-color: #af52de;
+            box-shadow: 0 0 4px rgba(175, 82, 222, 0.7);
+        }
+
         .controls-grid {
             display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
-            gap: 8px;
-            margin-bottom: 16px;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .btn-ctrl {
-            background-color: #1e1e1e;
-            color: #00ff88;
-            border: 1px solid #00ff8866;
-            padding: 12px 10px;
-            border-radius: 8px;
+            background-color: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s ease;
         }
         .btn-ctrl:active {
-            transform: scale(0.96);
-            background-color: #252525;
+            transform: scale(0.95);
         }
 
         .btn-stop {
-            background-color: #2a1113;
-            color: #ff4d4d;
-            border: 1px solid #ff4d4d66;
-        }
-        .btn-stop:active {
-            background-color: #3d171a;
+            background-color: var(--btn-stop-bg);
+            color: var(--btn-stop-color);
+            border: 1px solid var(--btn-stop-color);
         }
 
         .vol-box {
-            background: #1e1e1e;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background: var(--bg-card);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 12px;
-            border: 1px solid #333;
+            border: 1px solid var(--border-color);
         }
         .vol-box label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            color: #888;
+            color: var(--text-muted);
             white-space: nowrap;
         }
         .vol-box input[type="range"] {
             width: 100%;
-            accent-color: #00ff88;
+            accent-color: var(--accent);
             cursor: pointer;
         }
 
-        h3 {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            margin: 0 0 10px 0;
-            text-align: left;
-        }
-
-        .playlist {
-            background-color: #181818;
+        /* Кнопка розгортання еквалайзера */
+        .btn-toggle-eq {
+            background: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--border-color);
+            padding: 10px;
             border-radius: 10px;
-            overflow-y: auto;
-            text-align: left;
-            border: 1px solid #282828;
-            max-height: 40vh;
-            margin-bottom: 20px;
-        }
-
-        .station-item {
-            padding: 14px 16px;
-            border-bottom: 1px solid #222;
+            font-weight: bold;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #ddd;
-            font-size: 15px;
+            font-size: 12px;
+            width: 100%;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             transition: background 0.2s;
         }
-        .station-item:last-child {
-            border-bottom: none;
+        .btn-toggle-eq:active {
+            transform: scale(0.98);
         }
-        .station-item:hover {
-            background-color: #252525;
+
+        /* Еквалайзер */
+        .eq-panel {
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            display: none;
+            flex-direction: column;
+            gap: 8px;
         }
-        .station-item.active {
-            background-color: #00ff8815;
-            color: #00ff88;
-            font-weight: bold;
+        .eq-panel.show {
+            display: flex;
         }
-        .station-item .actions {
+        .eq-row {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .station-item .icon {
-            font-size: 12px;
-            opacity: 0.6;
+        .eq-row label {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-muted);
+            width: 75px;
+            text-align: left;
+            text-transform: uppercase;
         }
-        .station-item.active .icon {
-            opacity: 1;
+        .eq-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            cursor: pointer;
         }
-        .btn-del {
-            color: #ff4d4d;
-            font-size: 14px;
-            opacity: 0.5;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .btn-del:hover {
-            opacity: 1;
-            background: #ff4d4d22;
+        .eq-row span {
+            font-size: 10px;
+            color: var(--text-main);
+            width: 35px;
+            text-align: right;
         }
 
-        /* Форма додавання власної станції */
+        h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin: 0 0 8px 0;
+            text-align: left;
+        }
+
+        .playlist {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow-y: auto;
+            text-align: left;
+            border: 1px solid var(--border-color);
+            max-height: 32vh;
+            margin-bottom: 16px;
+        }
+
+        .station-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-main);
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        .station-item:last-child {
+            border-bottom: none;
+        }
+        .station-item.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .station-item .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-fav {
+            cursor: pointer;
+            opacity: 0.3;
+            font-size: 14px;
+        }
+        .btn-fav.active {
+            opacity: 1;
+            color: #ffca28;
+        }
+
+        .btn-del {
+            color: var(--btn-stop-color);
+            font-size: 13px;
+            opacity: 0.5;
+            padding: 2px 4px;
+        }
+
         .add-box {
-            background: #181818;
+            background: var(--bg-card);
             padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #282828;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
         .add-box input {
-            background: #101010;
-            border: 1px solid #333;
-            border-radius: 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             padding: 10px;
-            color: #fff;
-            font-size: 14px;
+            color: var(--text-main);
+            font-size: 13px;
             outline: none;
         }
-        .add-box input:focus {
-            border-color: #00ff88;
-        }
         .btn-add {
-            background-color: #00ff8822;
-            color: #00ff88;
-            border: 1px solid #00ff8866;
+            background-color: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid var(--border-color);
             padding: 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
         }
-        .btn-add:active {
-            background-color: #00ff8844;
+
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            border-radius: 8px;
+            padding: 10px;
+            position: fixed;
+            z-index: 10;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
-<body>
+<body data-theme="cyberpunk">
 
     <div class="container">
-        <div class="screen" id="status">ОБЕРІТЬ СТАНЦІЮ</div>
+        <div class="skin-selector">
+            <label for="theme-select">🎨 СКІН ОФОРМЛЕННЯ:</label>
+            <select id="theme-select">
+                <option value="cyberpunk">Cyberpunk (Neon)</option>
+                <option value="synthwave">Synthwave (80s)</option>
+                <option value="oled">OLED Black</option>
+                <option value="retro">Retro Amber</option>
+                <option value="matrix">Matrix (Green)</option>
+                <option value="ocean">Deep Ocean</option>
+                <option value="sunset">Sunset Vibe</option>
+                <option value="light">Light Minimal</option>
+            </select>
+        </div>
+
+        <div class="screen">
+            <span class="station-title" id="status">ОБЕРІТЬ СТАНЦІЮ</span>
+            <span class="track-title" id="current-track">Прямий ефір</span>
+            
+            <div class="spectrum-panel">
+                <div class="spectrum-bars" id="spectrum-bars"></div>
+            </div>
+        </div>
         
-        <!-- Керування програвачем -->
         <div class="controls-grid">
             <button class="btn-ctrl" id="prev-btn">⏮ НАЗАД</button>
             <button class="btn-ctrl btn-stop" id="stop-btn">■ СТОП</button>
@@ -224,12 +523,38 @@
             <input type="range" id="volume-slider" min="0" max="100" value="70">
         </div>
 
+        <button class="btn-toggle-eq" id="toggle-eq-btn">⚙ Еквалайзер [ Показати ]</button>
+        <div class="eq-panel" id="eq-panel">
+            <div class="eq-row">
+                <label>🔴 Бас (120 Гц)</label>
+                <input type="range" id="eq-bass" min="-15" max="15" value="0" step="1">
+                <span id="val-bass">0 дБ</span>
+            </div>
+            <div class="eq-row">
+                <label>🟡 Н.Сер (600 Гц)</label>
+                <input type="range" id="eq-lowmid" min="-15" max="15" value="0" step="1">
+                <span id="val-lowmid">0 дБ</span>
+            </div>
+            <div class="eq-row">
+                <label>🟢 Сер (1.5 кГц)</label>
+                <input type="range" id="eq-mid" min="-15" max="15" value="0" step="1">
+                <span id="val-mid">0 дБ</span>
+            </div>
+            <div class="eq-row">
+                <label>🔵 В.Сер (3.5 кГц)</label>
+                <input type="range" id="eq-highmid" min="-15" max="15" value="0" step="1">
+                <span id="val-highmid">0 дБ</span>
+            </div>
+            <div class="eq-row">
+                <label>🟣 Високі (11 кГц)</label>
+                <input type="range" id="eq-treble" min="-15" max="15" value="0" step="1">
+                <span id="val-treble">0 дБ</span>
+            </div>
+        </div>
+
         <h3>Список радіостанцій</h3>
-        
-        <!-- Список радіостанцій -->
         <div class="playlist" id="playlist"></div>
 
-        <!-- Додавання власної станції -->
         <h3>Додати станцію</h3>
         <div class="add-box">
             <input type="text" id="custom-name" placeholder="Назва станції">
@@ -238,13 +563,42 @@
         </div>
     </div>
 
-    <!-- Тег audio без атрибута crossorigin="anonymous" для уникнення CORS-помилок -->
-    <audio id="audio-player" preload="none"></audio>
+    <div id="toast"></div>
+    <audio id="audio-player" crossorigin="anonymous" preload="auto"></audio>
 
     <script>
-        // Початковий список станцій за замовчуванням
+        const NUM_BANDS = 20;
+        const BLOCKS_PER_BAND = 8;
+
+        const spectrumContainer = document.getElementById('spectrum-bars');
+        const columns = [];
+        const currentTrackEl = document.getElementById('current-track');
+
+        function getBandClass(index) {
+            if (index < 4) return 'band-bass';
+            if (index < 8) return 'band-lowmid';
+            if (index < 12) return 'band-mid';
+            if (index < 16) return 'band-highmid';
+            return 'band-treble';
+        }
+
+        for (let i = 0; i < NUM_BANDS; i++) {
+            const col = document.createElement('div');
+            col.className = 'spectrum-col ' + getBandClass(i);
+            const blocks = [];
+            for (let b = 0; b < BLOCKS_PER_BAND; b++) {
+                const block = document.createElement('div');
+                block.className = 'spectrum-block';
+                col.appendChild(block);
+                blocks.push(block);
+            }
+            spectrumContainer.appendChild(col);
+            columns.push(blocks);
+        }
+
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/AAC%2B_64" },
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128" },
+            { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
             { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1" },
@@ -255,7 +609,6 @@
             { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1" },
             { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1" },
             { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1" },
-            { name: "Радіо Перець ФМ", stream: "https://radio.perec.fm/radio-stilnoe" },
             { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1" },
             { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1" },
             { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio" },
@@ -264,11 +617,51 @@
             { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" }
         ];
 
-        // Завантаження користувацьких станцій з localStorage
         let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
-        let currentIndex = -1; // -1 означає, що нічого не відтворюється
+        let favorites = JSON.parse(localStorage.getItem('fav_radio_stations')) || [];
+        let currentIndex = -1;
 
-        // Ініціалізація Telegram WebApp
+        let audioCtx = null;
+        let analyser = null;
+        let compressor = null;
+        let sourceNode = null;
+        let isWebAudioInitialized = false;
+
+        let eqFilters = [];
+
+        let animationFrameId = null;
+        let isPlaying = false;
+        let prevHeights = new Array(NUM_BANDS).fill(4);
+
+        // Динамічний поріг піків для кожної смуги окремо, щоб уникнути зашкалювання
+        let bandPeaks = new Array(NUM_BANDS).fill(120);
+
+        const themeSelect = document.getElementById('theme-select');
+        const savedTheme = localStorage.getItem('radio_skin') || 'cyberpunk';
+        document.body.setAttribute('data-theme', savedTheme);
+        themeSelect.value = savedTheme;
+
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('radio_skin', newTheme);
+        });
+
+        const toggleEqBtn = document.getElementById('toggle-eq-btn');
+        const eqPanel = document.getElementById('eq-panel');
+        let isEqVisible = false;
+
+        toggleEqBtn.addEventListener('click', () => {
+            isEqVisible = !isEqVisible;
+            if (isEqVisible) {
+                eqPanel.classList.add('show');
+                toggleEqBtn.innerText = "⚙ Еквалайзер [ Сховати ]";
+            } else {
+                eqPanel.classList.remove('show');
+                toggleEqBtn.innerText = "⚙ Еквалайзер [ Показати ]";
+            }
+        });
+
         try {
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
@@ -284,205 +677,374 @@
         const nextButton = document.getElementById('next-btn');
         const playlistContainer = document.getElementById('playlist');
         const addBtn = document.getElementById('add-btn');
-        const customNameInput = document.getElementById('custom-name');
-        const customUrlInput = document.getElementById('custom-url');
 
-        // Встановлення початкової гучності
-        player.volume = volumeSlider.value / 100;
+        const savedVolume = localStorage.getItem('radio_volume');
+        if (savedVolume !== null) {
+            volumeSlider.value = savedVolume;
+            player.volume = savedVolume / 100;
+        }
 
         volumeSlider.addEventListener('input', function() {
             player.volume = this.value / 100;
+            localStorage.setItem('radio_volume', this.value);
         });
 
-        // Отримання всіх станцій (за замовчуванням + додані користувачем)
-        function getAllStations() {
-            return [...defaultStations, ...customStations];
-        }
-
-        // Ініціалізація системних команд для iOS Lock Screen / Control Center / Apple Watch
-        function setupMediaSession() {
-            if ('mediaSession' in navigator) {
-                // Вимикаємо стандартні кнопки перемотування (10 сек), якщо вони підхопилися
-                try {
-                    navigator.mediaSession.setActionHandler('seekbackward', null);
-                    navigator.mediaSession.setActionHandler('seekforward', null);
-                } catch(e) {}
-
-                // Призначаємо обробники для перемикання треків
-                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
-                navigator.mediaSession.setActionHandler('nexttrack', playNext);
-                
-                // Якщо система все одно показує кнопки перемотування — перенаправляємо їх дію на перемикання станцій
-                navigator.mediaSession.setActionHandler('seekbackward', playPrev);
-                navigator.mediaSession.setActionHandler('seekforward', playNext);
-
-                navigator.mediaSession.setActionHandler('play', () => {
-                    if (currentIndex !== -1) player.play();
-                });
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    player.pause();
-                });
+        function initWebAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
             }
-        }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
 
-        // Оновлення метаданих та стану відтворення для системного плеєра iOS
-        function updateMediaSessionMetadata(stationName) {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: stationName,
-                    artist: 'Інтернет Радіо',
-                    album: 'Прямий ефір'
-                });
+            if (!isWebAudioInitialized) {
+                try {
+                    analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    analyser.smoothingTimeConstant = 0.5;
 
-                // Вказуємо системі, що це лінійний потік (без фіксованої тривалості)
-                if ('setPositionState' in navigator.mediaSession) {
-                    try {
-                        navigator.mediaSession.setPositionState();
-                    } catch(e) {}
+                    compressor = audioCtx.createDynamicsCompressor();
+                    compressor.threshold.setValueAtTime(-20, audioCtx.currentTime);
+                    compressor.knee.setValueAtTime(20, audioCtx.currentTime);
+                    compressor.ratio.setValueAtTime(8, audioCtx.currentTime);
+                    compressor.attack.setValueAtTime(0.005, audioCtx.currentTime);
+                    compressor.release.setValueAtTime(0.2, audioCtx.currentTime);
+
+                    const freqs = [120, 600, 1500, 3500, 11000];
+                    eqFilters = freqs.map(freq => {
+                        const filter = audioCtx.createBiquadFilter();
+                        filter.type = 'peaking';
+                        filter.frequency.value = freq;
+                        filter.Q.value = 1.0;
+                        filter.gain.value = 0;
+                        return filter;
+                    });
+
+                    const splitter = audioCtx.createChannelSplitter(2);
+                    const merger = audioCtx.createChannelMerger(2);
+                    const delayNode = audioCtx.createDelay();
+                    delayNode.delayTime.value = 0.015;
+
+                    sourceNode = audioCtx.createMediaElementSource(player);
+                    
+                    let lastNode = sourceNode;
+                    lastNode.connect(compressor);
+                    lastNode = compressor;
+
+                    eqFilters.forEach(filter => {
+                        lastNode.connect(filter);
+                        lastNode = filter;
+                    });
+
+                    lastNode.connect(analyser);
+
+                    analyser.connect(splitter);
+                    splitter.connect(merger, 0, 0);
+                    splitter.connect(delayNode, 1);
+                    delayNode.connect(merger, 0, 1);
+
+                    merger.connect(audioCtx.destination);
+                    
+                    isWebAudioInitialized = true;
+                    loadSavedEqValues();
+                } catch (e) {
+                    isWebAudioInitialized = false;
                 }
             }
         }
 
-        // Відображення списку станцій
+        const eqConfigs = [
+            { id: 'eq-bass', valId: 'val-bass', index: 0 },
+            { id: 'eq-lowmid', valId: 'val-lowmid', index: 1 },
+            { id: 'eq-mid', valId: 'val-mid', index: 2 },
+            { id: 'eq-highmid', valId: 'val-highmid', index: 3 },
+            { id: 'eq-treble', valId: 'val-treble', index: 4 }
+        ];
+
+        eqConfigs.forEach(config => {
+            const slider = document.getElementById(config.id);
+            const valSpan = document.getElementById(config.valId);
+
+            slider.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                valSpan.innerText = (val > 0 ? `+${val}` : val) + " дБ";
+                localStorage.setItem(config.id, val);
+
+                if (eqFilters[config.index] && audioCtx) {
+                    eqFilters[config.index].gain.setValueAtTime(val, audioCtx.currentTime);
+                }
+            });
+        });
+
+        function loadSavedEqValues() {
+            eqConfigs.forEach(config => {
+                const saved = localStorage.getItem(config.id);
+                if (saved !== null) {
+                    const slider = document.getElementById(config.id);
+                    const valSpan = document.getElementById(config.valId);
+                    slider.value = saved;
+                    valSpan.innerText = (parseFloat(saved) > 0 ? `+${saved}` : saved) + " дБ";
+                    if (eqFilters[config.index] && audioCtx) {
+                        eqFilters[config.index].gain.setValueAtTime(parseFloat(saved), audioCtx.currentTime);
+                    }
+                }
+            });
+        }
+
+        function updateColumn(blocks, level) {
+            const activeCount = Math.round((level / 100) * BLOCKS_PER_BAND);
+            blocks.forEach((block, index) => {
+                if (index < activeCount) {
+                    block.classList.add('active');
+                } else {
+                    block.classList.remove('active');
+                }
+            });
+        }
+
+        function renderSpectrum() {
+            if (!isPlaying || player.paused || player.ended) {
+                resetMeters();
+                return;
+            }
+
+            let freqData = null;
+            if (isWebAudioInitialized && analyser) {
+                freqData = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(freqData);
+            }
+
+            const nyquist = audioCtx ? audioCtx.sampleRate / 2 : 22050;
+            const binCount = freqData ? freqData.length : 128;
+
+            for (let i = 0; i < NUM_BANDS; i++) {
+                let targetVal = 10;
+
+                if (freqData && freqData.length > 0) {
+                    // Розбиваємо весь діапазон частот рівномірно по стовпчиках
+                    let freqLow = (i / NUM_BANDS) * 11000 + 60;
+                    let freqHigh = ((i + 1) / NUM_BANDS) * 11000 + 60;
+
+                    let startBin = Math.floor((freqLow / nyquist) * binCount);
+                    let endBin = Math.floor((freqHigh / nyquist) * binCount);
+                    startBin = Math.max(0, startBin);
+                    endBin = Math.min(freqData.length - 1, endBin);
+
+                    let sum = 0;
+                    let count = 0;
+                    for (let b = startBin; b <= endBin; b++) {
+                        sum += freqData[b];
+                        count++;
+                    }
+                    let rawVal = count > 0 ? sum / count : freqData[0];
+
+                    // Адаптивний нормалізатор для кожної смуги (автоматично підлаштовує гучність)
+                    if (rawVal > bandPeaks[i]) {
+                        bandPeaks[i] = rawVal;
+                    } else {
+                        bandPeaks[i] -= 0.5; // Плавне зниження піку
+                        if (bandPeaks[i] < 50) bandPeaks[i] = 50;
+                    }
+
+                    let normVal = Math.min(1.0, rawVal / bandPeaks[i]);
+                    targetVal = Math.pow(normVal, 1.1) * 78 + 8;
+                } else {
+                    let fallbackTime = Date.now() / 120;
+                    let wave = Math.sin(fallbackTime + (i * 0.3));
+                    targetVal = Math.abs(wave) * 50 + 10;
+                }
+
+                let attackRelease = targetVal > prevHeights[i] ? 0.5 : 0.25;
+                prevHeights[i] += (targetVal - prevHeights[i]) * attackRelease;
+                
+                // Чітке обмеження, щоб стовпчики ніколи не зашкалювали за межі панелі (максимум 85%)
+                updateColumn(columns[i], Math.min(85, Math.max(5, prevHeights[i])));
+            }
+
+            animationFrameId = requestAnimationFrame(renderSpectrum);
+        }
+
+        function resetMeters() {
+            columns.forEach(col => col.forEach(b => b.classList.remove('active')));
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            prevHeights.fill(4);
+            bandPeaks.fill(120);
+        }
+
+        function getAllStations() {
+            const all = [...defaultStations, ...customStations];
+            return all.sort((a, b) => {
+                const isAFav = favorites.includes(a.stream);
+                const isBFav = favorites.includes(b.stream);
+                if (isAFav && !isBFav) return -1;
+                if (!isAFav && isBFav) return 1;
+                return 0;
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function setupMediaSession() {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                navigator.mediaSession.setActionHandler('nexttrack', playNext);
+                navigator.mediaSession.setActionHandler('play', () => { if (currentIndex !== -1) player.play(); });
+                navigator.mediaSession.setActionHandler('pause', () => player.pause());
+            }
+        }
+
+        function toggleFavorite(streamUrl, event) {
+            event.stopPropagation();
+            if (favorites.includes(streamUrl)) {
+                favorites = favorites.filter(url => url !== streamUrl);
+            } else {
+                favorites.push(streamUrl);
+            }
+            localStorage.setItem('fav_radio_stations', JSON.stringify(favorites));
+            renderPlaylist();
+        }
+
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
-            const allStations = getAllStations();
+            const stations = getAllStations();
 
-            allStations.forEach((station, index) => {
+            stations.forEach((station, index) => {
                 const item = document.createElement('div');
                 item.className = 'station-item' + (index === currentIndex ? ' active' : '');
-                
-                const isCustom = index >= defaultStations.length;
-                const deleteBtnHtml = isCustom ? `<span class="btn-del" data-custom-index="${index - defaultStations.length}">✖</span>` : '';
+
+                const isFav = favorites.includes(station.stream);
+                const isCustom = customStations.some(s => s.stream === station.stream);
 
                 item.innerHTML = `
                     <span>${station.name}</span>
                     <div class="actions">
-                        ${deleteBtnHtml}
-                        <span class="icon">${index === currentIndex ? '🔊' : '▶'}</span>
+                        <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
+                        ${isCustom ? `<span class="btn-del">✖</span>` : ''}
+                        <span style="font-size: 12px; opacity: 0.6;">${index === currentIndex ? '🔊' : '▶'}</span>
                     </div>
                 `;
 
-                // Клік по станції для відтворення
-                item.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('btn-del')) return;
-                    playStation(index);
-                });
+                item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
 
-                // Клік по кнопці видалення користувацької станції
                 if (isCustom) {
-                    const delBtn = item.querySelector('.btn-del');
-                    delBtn.addEventListener('click', (e) => {
+                    item.querySelector('.btn-del').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        deleteCustomStation(index - defaultStations.length);
+                        deleteCustomStation(station.stream);
                     });
                 }
 
+                item.addEventListener('click', () => playStation(index));
                 playlistContainer.appendChild(item);
             });
         }
 
-        // Функція відтворення за індексом
         function playStation(index) {
-            const allStations = getAllStations();
-            if (index < 0 || index >= allStations.length) return;
+            const stations = getAllStations();
+            if (index < 0 || index >= stations.length) return;
 
             currentIndex = index;
-            const station = allStations[currentIndex];
+            const station = stations[currentIndex];
 
             renderPlaylist();
             statusText.innerText = "ПІДКЛЮЧЕННЯ...";
+            currentTrackEl.innerText = "Завантаження потоку...";
+            isPlaying = false;
+            resetMeters();
 
-            // Оновлюємо метадані для iOS / Apple Watch
-            updateMediaSessionMetadata(station.name);
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({ title: station.name, artist: 'Інтернет Радіо' });
+            }
 
             player.pause();
             player.src = station.stream;
             player.load();
 
+            initWebAudio();
+
             player.play()
                 .then(() => {
                     statusText.innerText = "ГРАЄ: " + station.name.toUpperCase();
-                    setupMediaSession(); // Повторна фіксація обробників після початку відтворення
+                    currentTrackEl.innerText = "Прямий ефір: " + station.name;
+                    isPlaying = true;
+                    renderSpectrum();
+                    setupMediaSession();
                 })
-                .catch(error => {
+                .catch(() => {
                     statusText.innerText = "ПОМИЛКА ПОТОКУ";
-                    renderPlaylist();
-                    console.error("Помилка відтворення:", error);
+                    currentTrackEl.innerText = "Не вдалося з'єднатися";
+                    isPlaying = false;
+                    resetMeters();
+                    showToast("Не вдалося відтворити потік");
                 });
         }
 
-        // Функції переключення станцій
         function playPrev() {
-            const allStations = getAllStations();
-            if (allStations.length === 0) return;
-            
-            let newIndex = currentIndex - 1;
-            if (newIndex < 0) {
-                newIndex = allStations.length - 1;
-            }
+            const stations = getAllStations();
+            if (!stations.length) return;
+            let newIndex = currentIndex - 1 < 0 ? stations.length - 1 : currentIndex - 1;
             playStation(newIndex);
         }
 
         function playNext() {
-            const allStations = getAllStations();
-            if (allStations.length === 0) return;
-
-            let newIndex = currentIndex + 1;
-            if (newIndex >= allStations.length) {
-                newIndex = 0;
-            }
+            const stations = getAllStations();
+            if (!stations.length) return;
+            let newIndex = currentIndex + 1 >= stations.length ? 0 : currentIndex + 1;
             playStation(newIndex);
         }
 
-        // Переключення кнопками сайту
         prevButton.addEventListener('click', playPrev);
         nextButton.addEventListener('click', playNext);
 
-        // Зупинка відтворення
         stopButton.addEventListener('click', function() {
             player.pause();
             player.src = "";
             currentIndex = -1;
+            isPlaying = false;
             statusText.innerText = "ЗУПИНЕНО";
+            currentTrackEl.innerText = "";
+            resetMeters();
             renderPlaylist();
         });
 
-        // Додавання власної станції користувачем
         addBtn.addEventListener('click', function() {
-            const name = customNameInput.value.trim();
-            const stream = customUrlInput.value.trim();
+            const name = document.getElementById('custom-name').value.trim();
+            const stream = document.getElementById('custom-url').value.trim();
 
             if (!name || !stream) {
-                alert("Будь ласка, введіть назву та URL потоку.");
+                showToast("Заповніть назву та URL");
                 return;
             }
 
             customStations.push({ name, stream });
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
 
-            customNameInput.value = '';
-            customUrlInput.value = '';
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-url').value = '';
+            showToast("Станцію додано!");
 
             renderPlaylist();
         });
 
-        // Видалення користувацької станції
-        function deleteCustomStation(customIndex) {
-            const actualIndex = defaultStations.length + customIndex;
-            
-            if (currentIndex === actualIndex) {
-                stopButton.click();
-            } else if (currentIndex > actualIndex) {
-                currentIndex--;
-            }
-
-            customStations.splice(customIndex, 1);
+        function deleteCustomStation(streamUrl) {
+            customStations = customStations.filter(s => s.stream !== streamUrl);
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
-            renderPlaylist();
+            if (currentIndex !== -1 && getAllStations()[currentIndex]?.stream === streamUrl) {
+                stopButton.click();
+            } else {
+                renderPlaylist();
+            }
+            showToast("Станцію видалено");
         }
 
-        // Початкова ініціалізація
         setupMediaSession();
         renderPlaylist();
     </script>

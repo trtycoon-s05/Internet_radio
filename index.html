@@ -311,7 +311,6 @@
             cursor: pointer;
         }
 
-        /* Кнопка розгортання еквалайзера */
         .btn-toggle-eq {
             background: var(--bg-card);
             color: var(--accent);
@@ -331,7 +330,6 @@
             transform: scale(0.98);
         }
 
-        /* Еквалайзер */
         .eq-panel {
             background: var(--bg-card);
             padding: 12px;
@@ -597,7 +595,7 @@
         }
 
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128" },
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128.m3u" },
             { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
@@ -632,8 +630,6 @@
         let animationFrameId = null;
         let isPlaying = false;
         let prevHeights = new Array(NUM_BANDS).fill(4);
-
-        // Динамічний поріг піків для кожної смуги окремо, щоб уникнути зашкалювання
         let bandPeaks = new Array(NUM_BANDS).fill(120);
 
         const themeSelect = document.getElementById('theme-select');
@@ -810,9 +806,13 @@
             }
 
             let freqData = null;
+            let hasRealData = false;
+
             if (isWebAudioInitialized && analyser) {
                 freqData = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteFrequencyData(freqData);
+                // Перевіряємо, чи потік реально віддає дані (не всі нулі через CORS у Telegram)
+                hasRealData = freqData.some(val => val > 0);
             }
 
             const nyquist = audioCtx ? audioCtx.sampleRate / 2 : 22050;
@@ -821,8 +821,7 @@
             for (let i = 0; i < NUM_BANDS; i++) {
                 let targetVal = 10;
 
-                if (freqData && freqData.length > 0) {
-                    // Розбиваємо весь діапазон частот рівномірно по стовпчиках
+                if (hasRealData && freqData) {
                     let freqLow = (i / NUM_BANDS) * 11000 + 60;
                     let freqHigh = ((i + 1) / NUM_BANDS) * 11000 + 60;
 
@@ -839,26 +838,25 @@
                     }
                     let rawVal = count > 0 ? sum / count : freqData[0];
 
-                    // Адаптивний нормалізатор для кожної смуги (автоматично підлаштовує гучність)
                     if (rawVal > bandPeaks[i]) {
                         bandPeaks[i] = rawVal;
                     } else {
-                        bandPeaks[i] -= 0.5; // Плавне зниження піку
+                        bandPeaks[i] -= 0.5;
                         if (bandPeaks[i] < 50) bandPeaks[i] = 50;
                     }
 
                     let normVal = Math.min(1.0, rawVal / bandPeaks[i]);
                     targetVal = Math.pow(normVal, 1.1) * 78 + 8;
                 } else {
-                    let fallbackTime = Date.now() / 120;
-                    let wave = Math.sin(fallbackTime + (i * 0.3));
-                    targetVal = Math.abs(wave) * 50 + 10;
+                    // 🛡 Надійний резервний генератор для мобільного Telegram (якщо CORS заблокував спектр)
+                    let fallbackTime = Date.now() / 110;
+                    let wave = Math.sin(fallbackTime + (i * 0.35)) * Math.cos(fallbackTime * 0.5);
+                    targetVal = Math.abs(wave) * 65 + 12;
                 }
 
-                let attackRelease = targetVal > prevHeights[i] ? 0.5 : 0.25;
+                let attackRelease = targetVal > prevHeights[i] ? 0.55 : 0.25;
                 prevHeights[i] += (targetVal - prevHeights[i]) * attackRelease;
                 
-                // Чітке обмеження, щоб стовпчики ніколи не зашкалювали за межі панелі (максимум 85%)
                 updateColumn(columns[i], Math.min(85, Math.max(5, prevHeights[i])));
             }
 
@@ -964,11 +962,11 @@
                 navigator.mediaSession.metadata = new MediaMetadata({ title: station.name, artist: 'Інтернет Радіо' });
             }
 
+            initWebAudio();
+
             player.pause();
             player.src = station.stream;
             player.load();
-
-            initWebAudio();
 
             player.play()
                 .then(() => {
@@ -1044,6 +1042,13 @@
             }
             showToast("Станцію видалено");
         }
+
+        // Автоматична розблоковка аудіоконтексту по першому тапу в Telegram
+        document.body.addEventListener('click', () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }, { once: true });
 
         setupMediaSession();
         renderPlaylist();

@@ -1,4 +1,676 @@
-function updateMediaSession(station) {
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Налаштування для Safari та PWA на iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Radio Pro">
+    <title>INTERNET RADIO PRO</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-main: #0d0d0d;
+            --bg-card: #141414;
+            --bg-input: #0a0a0a;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.25);
+            --accent-soft: rgba(0, 255, 136, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: #222222;
+            --btn-stop-bg: #2a1113;
+            --btn-stop-color: #ff4d4d;
+        }
+
+        body[data-theme="cyberpunk"] {
+            --bg-main: #0d0d0d; --bg-card: #141414; --bg-input: #0a0a0a;
+            --accent: #00ff88; --accent-glow: rgba(0, 255, 136, 0.25); --accent-soft: rgba(0, 255, 136, 0.1);
+            --text-main: #ffffff; --text-muted: #888888; --border-color: #222222;
+            --btn-stop-bg: #2a1113; --btn-stop-color: #ff4d4d;
+        }
+        body[data-theme="synthwave"] {
+            --bg-main: #1a0933; --bg-card: #261245; --bg-input: #120526;
+            --accent: #ff007f; --accent-glow: rgba(255, 0, 127, 0.3); --accent-soft: rgba(0, 240, 255, 0.15);
+            --text-main: #00f0ff; --text-muted: #b182e6; --border-color: #ff007f55;
+            --btn-stop-bg: #4a0d2e; --btn-stop-color: #ff55aa;
+        }
+        body[data-theme="oled"] {
+            --bg-main: #000000; --bg-card: #080808; --bg-input: #101010;
+            --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.25); --accent-soft: rgba(59, 130, 246, 0.12);
+            --text-main: #f3f4f6; --text-muted: #6b7280; --border-color: #1f2937;
+            --btn-stop-bg: #1f1315; --btn-stop-color: #ef4444;
+        }
+        body[data-theme="retro"] {
+            --bg-main: #1c1917; --bg-card: #292524; --bg-input: #151413;
+            --accent: #f59e0b; --accent-glow: rgba(245, 158, 11, 0.25); --accent-soft: rgba(245, 158, 11, 0.12);
+            --text-main: #fef3c7; --text-muted: #a8a29e; --border-color: #44403c;
+            --btn-stop-bg: #321a18; --btn-stop-color: #f87171;
+        }
+        body[data-theme="matrix"] {
+            --bg-main: #020d04; --bg-card: #061a0a; --bg-input: #010803;
+            --accent: #22c55e; --accent-glow: rgba(34, 197, 94, 0.3); --accent-soft: rgba(34, 197, 94, 0.12);
+            --text-main: #dcfce7; --text-muted: #4ade80; --border-color: #14532d;
+            --btn-stop-bg: #1c0d0d; --btn-stop-color: #f87171;
+        }
+        body[data-theme="ocean"] {
+            --bg-main: #06101e; --bg-card: #0c1c30; --bg-input: #040a14;
+            --accent: #38bdf8; --accent-glow: rgba(56, 189, 248, 0.3); --accent-soft: rgba(56, 189, 248, 0.12);
+            --text-main: #e0f2fe; --text-muted: #7dd3fc; --border-color: #0369a1;
+            --btn-stop-bg: #2a1113; --btn-stop-color: #ff4d4d;
+        }
+        body[data-theme="sunset"] {
+            --bg-main: #1e111a; --bg-card: #2e1a29; --bg-input: #140a12;
+            --accent: #fb7185; --accent-glow: rgba(251, 113, 133, 0.3); --accent-soft: rgba(251, 113, 133, 0.12);
+            --text-main: #ffe4e6; --text-muted: #fda4af; --border-color: #881337;
+            --btn-stop-bg: #111a2e; --btn-stop-color: #60a5fa;
+        }
+        body[data-theme="light"] {
+            --bg-main: #f3f4f6; --bg-card: #ffffff; --bg-input: #e5e7eb;
+            --accent: #10b981; --accent-glow: rgba(16, 185, 129, 0.15); --accent-soft: rgba(16, 185, 129, 0.1);
+            --text-main: #111827; --text-muted: #6b7280; --border-color: #e5e7eb;
+            --btn-stop-bg: #fee2e2; --btn-stop-color: #ef4444;
+        }
+        body[data-theme="cyber-gold"] {
+            --bg-main: #0a0a0a; --bg-card: #141412; --bg-input: #050505;
+            --accent: #ffd700; --accent-glow: rgba(255, 215, 0, 0.3); --accent-soft: rgba(255, 215, 0, 0.12);
+            --text-main: #fffdf0; --text-muted: #9c9365; --border-color: #332f12;
+            --btn-stop-bg: #2c1a14; --btn-stop-color: #ff6b6b;
+        }
+        body[data-theme="emerald-glass"] {
+            --bg-main: #02140d; --bg-card: #052216; --bg-input: #010f09;
+            --accent: #34d399; --accent-glow: rgba(52, 211, 153, 0.3); --accent-soft: rgba(52, 211, 153, 0.12);
+            --text-main: #ecfdf5; --text-muted: #6ee7b7; --border-color: #064e3b;
+            --btn-stop-bg: #2a1113; --btn-stop-color: #f87171;
+        }
+        body[data-theme="purple-haze"] {
+            --bg-main: #130924; --bg-card: #1f1038; --bg-input: #0c0517;
+            --accent: #c084fc; --accent-glow: rgba(192, 132, 252, 0.3); --accent-soft: rgba(192, 132, 252, 0.15);
+            --text-main: #f3e8ff; --text-muted: #d8b4fe; --border-color: #581c87;
+            --btn-stop-bg: #3b0764; --btn-stop-color: #f43f5e;
+        }
+        body[data-theme="crimson-blood"] {
+            --bg-main: #140406; --bg-card: #21070b; --bg-input: #0a0203;
+            --accent: #f43f5e; --accent-glow: rgba(244, 63, 94, 0.3); --accent-soft: rgba(244, 63, 94, 0.12);
+            --text-main: #ffe4e6; --text-muted: #fda4af; --border-color: #881337;
+            --btn-stop-bg: #2b0b11; --btn-stop-color: #fb7185;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main); color: var(--accent);
+            text-align: center; padding: 12px; margin: 0; user-select: none;
+            display: flex; flex-direction: column; min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container { max-width: 480px; margin: 0 auto; width: 100%; }
+
+        .skin-selector {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; background: var(--bg-card); padding: 8px 12px;
+            border-radius: 10px; border: 1px solid var(--border-color);
+        }
+        .skin-selector label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+        .skin-selector select {
+            background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);
+            padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer;
+        }
+
+        .custom-editor {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            padding: 12px; border-radius: 10px; margin-bottom: 10px; display: none;
+            flex-direction: column; gap: 8px; text-align: left;
+        }
+        .custom-editor.active { display: flex; }
+        .color-picker-row {
+            display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-main);
+        }
+        .color-picker-row input[type="color"] {
+            border: none; width: 32px; height: 24px; background: none; cursor: pointer; border-radius: 4px;
+        }
+        .btn-apply-skin {
+            background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--border-color);
+            padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 4px; text-align: center;
+        }
+
+        /* Головний екран */
+        .screen {
+            background: #000000; padding: 12px; border-radius: 14px;
+            margin-bottom: 12px; border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        .station-title {
+            font-size: 15px; font-weight: 800; word-break: break-word; text-align: center;
+            letter-spacing: 1.2px; color: var(--text-main); text-transform: uppercase;
+            width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .screen-middle-row {
+            display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px;
+        }
+
+        .spectrum-side {
+            background: #030303; padding: 4px 5px; border-radius: 8px;
+            border: 1px solid #1a1a1a; display: flex; gap: 2px;
+            flex: 1; height: 86px; align-items: flex-end; justify-content: center;
+        }
+
+        .spectrum-col {
+            display: flex; flex-direction: column-reverse; gap: 2px; flex: 1; height: 100%; justify-content: flex-start;
+        }
+
+        .spectrum-pixel {
+            width: 100%; height: 14px; background-color: #121212; border-radius: 1px;
+            transition: background-color 0.05s ease, box-shadow 0.05s ease;
+        }
+
+        .spectrum-pixel.row-0.lit { background-color: #311b92; box-shadow: 0 0 3px #311b92; }
+        .spectrum-pixel.row-1.lit { background-color: #0288d1; box-shadow: 0 0 3px #0288d1; }
+        .spectrum-pixel.row-2.lit { background-color: #00897b; box-shadow: 0 0 3px #00897b; }
+        .spectrum-pixel.row-3.lit { background-color: #fbc02d; box-shadow: 0 0 4px #fbc02d; }
+        .spectrum-pixel.row-4.lit { background-color: #f57c00; box-shadow: 0 0 4px #f57c00; }
+        .spectrum-pixel.row-5.lit { background-color: #d32f2f; box-shadow: 0 0 5px #d32f2f; }
+
+        .screen-info-center {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+
+        .station-logo {
+            width: 86px; height: 86px; border-radius: 12px; object-fit: cover; background: #080808;
+            border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 34px;
+        }
+        .station-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+
+        .controls-grid {
+            display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px;
+        }
+        .btn-ctrl {
+            background-color: var(--bg-card); color: var(--accent);
+            border: 1px solid var(--border-color); padding: 10px;
+            border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            touch-action: manipulation;
+        }
+        .btn-ctrl:active { transform: scale(0.95); }
+        .btn-stop {
+            background-color: var(--btn-stop-bg); color: var(--btn-stop-color);
+            border: 1px solid var(--btn-stop-color);
+        }
+
+        .vol-box {
+            background: var(--bg-card); padding: 10px 14px; border-radius: 10px;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .vol-box label { font-size: 11px; font-weight: bold; color: var(--text-muted); white-space: nowrap; }
+        .vol-box input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+        h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 6px 0; text-align: left; }
+
+        .playlist {
+            background-color: var(--bg-card); border-radius: 12px; 
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            text-align: left; border: 1px solid var(--border-color); 
+            max-height: 32vh; margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            touch-action: pan-y;
+        }
+        .station-item {
+            padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .station-item:last-child { border-bottom: none; }
+        .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
+        .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
+        
+        .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; pointer-events: none; }
+        .station-logo-mini {
+            width: 26px; height: 26px; border-radius: 6px; object-fit: cover; background: var(--bg-input);
+            display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+            border: 1px solid var(--border-color);
+        }
+        .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
+        .drag-handle:active { cursor: grabbing; }
+        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
+        .btn-fav.active { opacity: 1; color: #ffca28; }
+        .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.6; cursor: pointer; padding: 4px; }
+
+        .add-box {
+            background: var(--bg-card); padding: 10px; border-radius: 12px;
+            margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .add-box input {
+            background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 9px; color: var(--text-main); font-size: 13px; outline: none;
+        }
+        .btn-add {
+            background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--border-color);
+            padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+        }
+        #toast {
+            visibility: hidden; min-width: 200px; background-color: var(--bg-card); color: var(--accent);
+            border: 1px solid var(--border-color); text-align: center; border-radius: 8px; padding: 10px;
+            position: fixed; z-index: 10; bottom: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 13px; opacity: 0; transition: opacity 0.3s, visibility 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body data-theme="cyberpunk">
+
+    <div class="container">
+        <div class="skin-selector">
+            <label for="theme-select">🎨 СКІН ОФОРМЛЕННЯ:</label>
+            <select id="theme-select">
+                <option value="cyberpunk">Cyberpunk (Neon)</option>
+                <option value="synthwave">Synthwave (80s)</option>
+                <option value="oled">OLED Black</option>
+                <option value="retro">Retro Amber</option>
+                <option value="matrix">Matrix (Green)</option>
+                <option value="ocean">Deep Ocean</option>
+                <option value="sunset">Sunset Vibe</option>
+                <option value="light">Light Minimal</option>
+                <option value="cyber-gold">Cyber Gold</option>
+                <option value="emerald-glass">Emerald Glass</option>
+                <option value="purple-haze">Purple Haze</option>
+                <option value="crimson-blood">Crimson Blood</option>
+                <option value="random">🎲 Random Skin</option>
+                <option value="custom">✏️ Свій скін (Кастом)</option>
+            </select>
+        </div>
+
+        <div class="custom-editor" id="custom-editor">
+            <div class="color-picker-row"><span>Основний фон:</span><input type="color" id="cp-bg" value="#111111"></div>
+            <div class="color-picker-row"><span>Колір карток:</span><input type="color" id="cp-card" value="#1c1c1c"></div>
+            <div class="color-picker-row"><span>Неоновий акцент:</span><input type="color" id="cp-accent" value="#00ffcc"></div>
+            <div class="color-picker-row"><span>Головний текст:</span><input type="color" id="cp-text" value="#ffffff"></div>
+            <button class="btn-apply-skin" id="btn-apply-skin">✓ ЗБЕРЕГТИ ТА СХОВАТИ</button>
+        </div>
+
+        <!-- Екран -->
+        <div class="screen">
+            <div class="station-title" id="status">ОБЕРІТЬ СТАНЦІЮ</div>
+            <div class="screen-middle-row">
+                <div class="spectrum-side" id="left-spectrum"></div>
+                <div class="screen-info-center">
+                    <div id="screen-logo-container">
+                        <div class="station-logo">📻</div>
+                    </div>
+                </div>
+                <div class="spectrum-side" id="right-spectrum"></div>
+            </div>
+        </div>
+        
+        <div class="controls-grid">
+            <button class="btn-ctrl" id="prev-btn">⏮ НАЗАД</button>
+            <button class="btn-ctrl btn-stop" id="stop-btn">■ СТОП</button>
+            <button class="btn-ctrl" id="next-btn">ВПЕРЕД ⏭</button>
+        </div>
+
+        <div class="vol-box">
+            <label>ГУЧНІСТЬ</label>
+            <input type="range" id="volume-slider" min="0" max="100" value="70">
+        </div>
+
+        <h3>Список радіостанцій (тягніть за ⋮⋮)</h3>
+        <div class="playlist" id="playlist"></div>
+
+        <h3>Додати станцію</h3>
+        <div class="add-box">
+            <input type="text" id="custom-name" placeholder="Назва станції">
+            <input type="url" id="custom-url" placeholder="URL потоку (https://...)">
+            <input type="url" id="custom-logo" placeholder="URL логотипу (необов'язково)">
+            <button class="btn-add" id="add-btn">+ ДОДАТИ СТАНЦІЮ</button>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <audio id="audio-player" preload="auto" playsinline webkit-playsinline></audio>
+
+    <script>
+        const COLS_COUNT = 4; 
+        const ROWS_COUNT = 6; 
+        
+        const leftSpectrumEl = document.getElementById('left-spectrum');
+        const rightSpectrumEl = document.getElementById('right-spectrum');
+        const leftCols = [];
+        const rightCols = [];
+
+        function createPixelSpectrum(container, colsArray) {
+            for (let c = 0; c < COLS_COUNT; c++) {
+                const colEl = document.createElement('div');
+                colEl.className = 'spectrum-col';
+                const pixels = [];
+                for (let r = 0; r < ROWS_COUNT; r++) {
+                    const px = document.createElement('div');
+                    px.className = `spectrum-pixel row-${r}`;
+                    colEl.appendChild(px);
+                    pixels.push(px);
+                }
+                container.appendChild(colEl);
+                colsArray.push(pixels);
+            }
+        }
+
+        createPixelSpectrum(leftSpectrumEl, leftCols);
+        createPixelSpectrum(rightSpectrumEl, rightCols);
+
+        const customEditor = document.getElementById('custom-editor');
+        const screenLogoContainer = document.getElementById('screen-logo-container');
+        const btnApplySkin = document.getElementById('btn-apply-skin');
+
+        const availableThemes = [
+            "cyberpunk", "synthwave", "oled", "retro", "matrix", 
+            "ocean", "sunset", "light", "cyber-gold", "emerald-glass", 
+            "purple-haze", "crimson-blood"
+        ];
+
+        const defaultStations = [
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128", logo: "https://slukhay.com/uploads/2026/3/9/05be7ad9-6e41-4bcd-82f9-680db9802a8e.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq", logo: "https://slukhay.com/uploads/2025/6/26/84ac3186-255b-4331-a289-7c48923dc1f4.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv", logo: "https://slukhay.com/uploads/2025/6/26/c3faf022-3c69-4ab1-a18b-31cef76465fe.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1", logo: "https://slukhay.com/uploads/2026/5/21/c6b6edf7-94cf-436c-9c05-c32584460bc3.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/9/16/357f0be7-4ecf-4a44-a3c2-656e8b0224dd.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/13581b85-d113-45fa-8784-12c11c3640b7.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd", logo: "https://slukhay.com/uploads/2026/2/3/0fc2953e-4564-4e15-8368-4600ac738071.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/0e404084-9364-4afb-a3ee-709d3ea0fcae.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/5/963f96f1-039c-4bdd-b2af-8d64975f8123.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/17d5d5ad-928a-4dc1-aed5-f86babdea9b4.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/a1200b2f-4914-4430-81cf-d6d4b6bf6f73.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/22/e690a727-199f-4112-bab8-8711fedb98fc.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/8/6e3b3fe4-de03-451a-b56f-78795766c2eb.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/917d6303-c472-47ee-bf53-55b79e65dc48.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1", logo: "https://slukhay.com/uploads/2026/4/22/9f130198-c035-4576-9975-6d84ecbd3d6f.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio", logo: "https://slukhay.com/uploads/2025/6/26/d77c72e5-1065-4ed0-9b50-2191604e8f12.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Radio Прищепкін TOP40 UA", stream: "https://aac.prischepkin.com:8443/radio?npa=1", logo: "https://slukhay.com/uploads/2026/3/18/955f4d5f-7fe9-4819-be5c-2c238a691564.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Dance FM", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/7/24/7ad86781-535a-40b0-99f5-0d673a79618e.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/10/ff2ae5a4-7b52-42a0-8722-7f418062b840.png?w=256&h=256&fit=cover&output=webp&q=85" }
+        ];
+
+        let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
+        let favorites = JSON.parse(localStorage.getItem('fav_radio_stations')) || [];
+        
+        let stationsList = [];
+        let seenStreams = new Set();
+
+        [...defaultStations, ...customStations].forEach(station => {
+            if (station && station.stream && !seenStreams.has(station.stream)) {
+                seenStreams.add(station.stream);
+                stationsList.push(station);
+            }
+        });
+        localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+
+        let currentIndex = -1;
+        let isPlaying = false;
+        let spectrumInterval = null;
+
+        const player = document.getElementById('audio-player');
+        const statusText = document.getElementById('status');
+        const volumeSlider = document.getElementById('volume-slider');
+        const stopButton = document.getElementById('stop-btn');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+        const playlistContainer = document.getElementById('playlist');
+        const addBtn = document.getElementById('add-btn');
+        const themeSelect = document.getElementById('theme-select');
+
+        const cpBg = document.getElementById('cp-bg');
+        const cpCard = document.getElementById('cp-card');
+        const cpAccent = document.getElementById('cp-accent');
+        const cpText = document.getElementById('cp-text');
+
+        function hexToRgba(hex, alpha) {
+            let c = hex.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            let num = parseInt(c, 16);
+            return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+        }
+
+        function applyCustomColors(bg, card, accent, text) {
+            const root = document.documentElement.style;
+            root.setProperty('--bg-main', bg);
+            root.setProperty('--bg-card', card);
+            root.setProperty('--bg-input', bg);
+            root.setProperty('--accent', accent);
+            root.setProperty('--accent-glow', hexToRgba(accent, 0.3));
+            root.setProperty('--accent-soft', hexToRgba(accent, 0.15));
+            root.setProperty('--text-main', text);
+            root.setProperty('--text-muted', text);
+            root.setProperty('--border-color', hexToRgba(accent, 0.3));
+        }
+
+        function loadCustomSettings() {
+            const settings = JSON.parse(localStorage.getItem('radio_custom_skin')) || {
+                bg: '#111111', card: '#1c1c1c', accent: '#00ffcc', text: '#ffffff'
+            };
+            cpBg.value = settings.bg;
+            cpCard.value = settings.card;
+            cpAccent.value = settings.accent;
+            cpText.value = settings.text;
+            applyCustomColors(settings.bg, settings.card, settings.accent, settings.text);
+        }
+
+        function saveCustomSettings() {
+            const settings = {
+                bg: cpBg.value, card: cpCard.value, accent: cpAccent.value, text: cpText.value
+            };
+            localStorage.setItem('radio_custom_skin', JSON.stringify(settings));
+            applyCustomColors(settings.bg, settings.card, settings.accent, settings.text);
+        }
+
+        [cpBg, cpCard, cpAccent, cpText].forEach(el => {
+            el.addEventListener('input', saveCustomSettings);
+        });
+
+        btnApplySkin.addEventListener('click', () => {
+            saveCustomSettings();
+            customEditor.classList.remove('active');
+            showToast("Скін збережено!");
+        });
+
+        function applyTheme(themeName) {
+            if (themeName === 'random') {
+                customEditor.classList.remove('active');
+                const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+                document.body.setAttribute('data-theme', randomTheme);
+            } else if (themeName === 'custom') {
+                customEditor.classList.add('active');
+                document.body.setAttribute('data-theme', 'custom');
+                loadCustomSettings();
+            } else {
+                customEditor.classList.remove('active');
+                document.body.setAttribute('data-theme', themeName);
+            }
+        }
+
+        let savedTheme = localStorage.getItem('radio_skin') || 'cyberpunk';
+        if (savedTheme === 'cassette') savedTheme = 'cyberpunk';
+        themeSelect.value = savedTheme;
+        applyTheme(savedTheme);
+
+        themeSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('radio_skin', val);
+            applyTheme(val);
+        });
+
+        const savedVolume = localStorage.getItem('radio_volume');
+        if (savedVolume !== null) {
+            volumeSlider.value = savedVolume;
+            player.volume = savedVolume / 100;
+        }
+
+        volumeSlider.addEventListener('input', function() {
+            player.volume = this.value / 100;
+            localStorage.setItem('radio_volume', this.value);
+        });
+
+        function startSpectrumAnimation() {
+            if (spectrumInterval) return;
+
+            spectrumInterval = setInterval(() => {
+                if (!isPlaying || player.paused) {
+                    stopSpectrumAnimation();
+                    return;
+                }
+
+                updateHighCols(leftCols);
+                updateHighCols(rightCols);
+            }, 85);
+        }
+
+        function updateHighCols(cols) {
+            cols.forEach((pixels) => {
+                let activeRows = Math.floor(Math.random() * ROWS_COUNT) + 1;
+                pixels.forEach((px, rIndex) => {
+                    if (rIndex < activeRows) px.classList.add('lit');
+                    else px.classList.remove('lit');
+                });
+            });
+        }
+
+        function stopSpectrumAnimation() {
+            if (spectrumInterval) {
+                clearInterval(spectrumInterval);
+                spectrumInterval = null;
+            }
+            [...leftCols, ...rightCols].forEach(pixels => {
+                pixels.forEach((px, rIndex) => {
+                    if (rIndex === 0) px.classList.add('lit');
+                    else px.classList.remove('lit');
+                });
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function toggleFavorite(streamUrl, event) {
+            event.stopPropagation();
+            if (favorites.includes(streamUrl)) {
+                favorites = favorites.filter(url => url !== streamUrl);
+            } else {
+                favorites.push(streamUrl);
+            }
+            localStorage.setItem('fav_radio_stations', JSON.stringify(favorites));
+            renderPlaylist();
+        }
+
+        let draggedIndex = null;
+
+        function renderPlaylist() {
+            playlistContainer.innerHTML = '';
+            stationsList.forEach((station, index) => {
+                const item = document.createElement('div');
+                item.className = 'station-item' + (index === currentIndex ? ' active' : '');
+                item.setAttribute('draggable', 'true');
+                item.dataset.index = index;
+
+                const isFav = favorites.includes(station.stream);
+                const isCustom = customStations.some(s => s.stream === station.stream);
+
+                const logoContent = station.logo 
+                    ? `<img src="${station.logo}" class="station-logo-mini" onerror="this.outerHTML='<div class=\'station-logo-mini\'>📻</div>'">`
+                    : `<div class="station-logo-mini">📻</div>`;
+
+                item.innerHTML = `
+                    <div class="actions">
+                        <span class="drag-handle" title="Перетягнути">⋮⋮</span>
+                    </div>
+                    <div class="station-info">
+                        ${logoContent}
+                        <span class="station-name">${station.name}</span>
+                    </div>
+                    <div class="actions">
+                        <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
+                        ${isCustom ? `<span class="btn-del" onclick="event.stopPropagation(); deleteCustomStation('${station.stream}')">✖</span>` : ''}
+                        <span>${index === currentIndex ? '🔊' : '▶'}</span>
+                    </div>
+                `;
+
+                // Drag & Drop для браузерів/ПК
+                item.addEventListener('dragstart', () => {
+                    draggedIndex = index;
+                    setTimeout(() => item.classList.add('dragging'), 0);
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    draggedIndex = null;
+                    localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+                    renderPlaylist();
+                });
+
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedIndex === null || draggedIndex === index) return;
+
+                    const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
+                    
+                    const movedItem = stationsList.splice(draggedIndex, 1)[0];
+                    stationsList.splice(index, 0, movedItem);
+
+                    if (activeStream) {
+                        currentIndex = stationsList.findIndex(s => s.stream === activeStream);
+                    }
+                    draggedIndex = index;
+                });
+
+                item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
+
+                // Захист скролу від випадкових кліків на iPhone у Safari
+                let startX = 0, startY = 0;
+                item.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+
+                item.addEventListener('touchend', (e) => {
+                    let endX = e.changedTouches[0].clientX;
+                    let endY = e.changedTouches[0].clientY;
+                    if (Math.abs(endX - startX) < 8 && Math.abs(endY - startY) < 8) {
+                        e.preventDefault();
+                        playStation(index);
+                    }
+                });
+
+                item.addEventListener('click', () => {
+                    playStation(index);
+                });
+                
+                playlistContainer.appendChild(item);
+            });
+        }
+
+        function updateDisplayVisuals(station) {
+            if (station && station.logo) {
+                screenLogoContainer.innerHTML = `<img src="${station.logo}" class="station-logo" onerror="this.parentElement.innerHTML='<div class=\\'station-logo\\'>📻</div>'">`;
+            } else {
+                screenLogoContainer.innerHTML = `<div class="station-logo">📻</div>`;
+            }
+        }
+
+        // Повна підтримка MediaSession для Safari та Apple Watch
+        function updateMediaSession(station) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: station ? station.name : "INTERNET RADIO PRO",
@@ -9,23 +681,17 @@ function updateMediaSession(station) {
 
                 try {
                     navigator.mediaSession.setActionHandler('previoustrack', () => {
-                        if (!stationsList.length) return;
-                        let next = currentIndex - 1 < 0 ? stationsList.length - 1 : currentIndex - 1;
-                        playStation(next);
+                        handlePrev(new Event('click'));
                     });
 
                     navigator.mediaSession.setActionHandler('nexttrack', () => {
-                        if (!stationsList.length) return;
-                        let next = currentIndex + 1 >= stationsList.length ? 0 : currentIndex + 1;
-                        playStation(next);
+                        handleNext(new Event('click'));
                     });
 
                     navigator.mediaSession.setActionHandler('play', () => {
-                        if (currentIndex !== -1) {
-                            player.play();
-                            isPlaying = true;
-                            startSpectrumAnimation();
-                        }
+                        player.play();
+                        isPlaying = true;
+                        startSpectrumAnimation();
                     });
 
                     navigator.mediaSession.setActionHandler('pause', () => {
@@ -34,7 +700,116 @@ function updateMediaSession(station) {
                         stopSpectrumAnimation();
                     });
                 } catch (e) {
-                    console.log("MediaSession actions not supported", e);
+                    console.log("MediaSession error", e);
                 }
             }
         }
+
+        function playStation(index) {
+            if (index < 0 || index >= stationsList.length) return;
+
+            currentIndex = index;
+            const station = stationsList[currentIndex];
+
+            if (themeSelect.value === 'random') {
+                applyTheme('random');
+            }
+
+            renderPlaylist();
+            statusText.innerText = station.name.toUpperCase();
+
+            updateDisplayVisuals(station);
+            updateMediaSession(station);
+
+            player.pause();
+            player.src = station.stream;
+            player.load();
+
+            isPlaying = true;
+            stopSpectrumAnimation();
+
+            player.play().then(() => {
+                startSpectrumAnimation();
+            }).catch(() => {
+                statusText.innerText = "ПОМИЛКА ПОТОКУ";
+                isPlaying = false;
+                stopSpectrumAnimation();
+            });
+        }
+
+        stopButton.addEventListener('click', () => {
+            player.pause();
+            player.src = "";
+            currentIndex = -1;
+            isPlaying = false;
+            statusText.innerText = "ОБЕРІТЬ СТАНЦІЮ";
+            updateDisplayVisuals(null);
+            stopSpectrumAnimation();
+            renderPlaylist();
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = null;
+            }
+        });
+
+        function handlePrev(e) {
+            e.preventDefault();
+            if (!stationsList.length) return;
+            let next = currentIndex - 1 < 0 ? stationsList.length - 1 : currentIndex - 1;
+            playStation(next);
+        }
+
+        function handleNext(e) {
+            e.preventDefault();
+            if (!stationsList.length) return;
+            let next = currentIndex + 1 >= stationsList.length ? 0 : currentIndex + 1;
+            playStation(next);
+        }
+
+        prevButton.addEventListener('touchend', handlePrev);
+        prevButton.addEventListener('click', handlePrev);
+
+        nextButton.addEventListener('touchend', handleNext);
+        nextButton.addEventListener('click', handleNext);
+
+        addBtn.addEventListener('click', () => {
+            const name = document.getElementById('custom-name').value.trim();
+            const stream = document.getElementById('custom-url').value.trim();
+            const logo = document.getElementById('custom-logo').value.trim();
+
+            if (!name || !stream) {
+                showToast("Заповніть назву та URL");
+                return;
+            }
+
+            customStations.push({ name, stream, logo });
+            stationsList.push({ name, stream, logo });
+
+            localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
+            localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-url').value = '';
+            document.getElementById('custom-logo').value = '';
+            showToast("Станцію додано!");
+            renderPlaylist();
+        });
+
+        window.deleteCustomStation = function(streamUrl) {
+            customStations = customStations.filter(s => s.stream !== streamUrl);
+            stationsList = stationsList.filter(s => s.stream !== streamUrl);
+
+            localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
+            localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+
+            if (currentIndex !== -1 && stationsList[currentIndex]?.stream === streamUrl) {
+                stopButton.click();
+            } else {
+                renderPlaylist();
+            }
+            showToast("Станцію видалено");
+        };
+
+        renderPlaylist();
+    </script>
+</body>
+</html>

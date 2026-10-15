@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>INTERNET RADIO PRO</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -186,7 +186,7 @@
         }
         .btn-ctrl {
             background-color: var(--bg-card); color: var(--accent);
-            border: 1px solid var(--border-color); padding: 12px 10px;
+            border: 1px solid var(--border-color); padding: 10px;
             border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             touch-action: manipulation;
@@ -213,16 +213,13 @@
             text-align: left; border: 1px solid var(--border-color); 
             max-height: 32vh; margin-bottom: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            touch-action: pan-y;
         }
         .station-item {
-            padding: 8px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
+            padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
-            transition: background-color 0.2s, opacity 0.2s;
         }
         .station-item:last-child { border-bottom: none; }
         .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
-        .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
         
         .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; pointer-events: none; }
         .station-logo-mini {
@@ -233,12 +230,10 @@
         .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
         .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 4px 6px; font-weight: bold; touch-action: none; }
-        .drag-handle:active { cursor: grabbing; }
-        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 14px; padding: 4px; }
+        .actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
-        .btn-del { color: var(--btn-stop-color); font-size: 13px; opacity: 0.6; cursor: pointer; padding: 4px; }
+        .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.6; cursor: pointer; padding: 4px; }
 
         .add-box {
             background: var(--bg-card); padding: 10px; border-radius: 12px;
@@ -318,7 +313,7 @@
             <input type="range" id="volume-slider" min="0" max="100" value="70">
         </div>
 
-        <h3>Список радіостанцій (тягніть за ⋮⋮)</h3>
+        <h3>Список радіостанцій</h3>
         <div class="playlist" id="playlist"></div>
 
         <h3>Додати станцію</h3>
@@ -521,19 +516,14 @@
                     return;
                 }
 
-                let vol = player.muted ? 0 : player.volume;
-
-                updateHighCols(leftCols, vol);
-                updateHighCols(rightCols, vol);
+                updateHighCols(leftCols);
+                updateHighCols(rightCols);
             }, 85);
         }
 
-        function updateHighCols(cols, volume) {
+        function updateHighCols(cols) {
             cols.forEach((pixels) => {
-                let activeRows = Math.floor(Math.random() * (ROWS_COUNT * volume)) + 1;
-                if (activeRows > ROWS_COUNT) activeRows = ROWS_COUNT;
-                if (activeRows < 1) activeRows = 1;
-
+                let activeRows = Math.floor(Math.random() * ROWS_COUNT) + 1;
                 pixels.forEach((px, rIndex) => {
                     if (rIndex < activeRows) px.classList.add('lit');
                     else px.classList.remove('lit');
@@ -572,14 +562,11 @@
             renderPlaylist();
         }
 
-        let draggedIndex = null;
-
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
             stationsList.forEach((station, index) => {
                 const item = document.createElement('div');
                 item.className = 'station-item' + (index === currentIndex ? ' active' : '');
-                item.setAttribute('draggable', 'true');
                 item.dataset.index = index;
 
                 const isFav = favorites.includes(station.stream);
@@ -590,9 +577,6 @@
                     : `<div class="station-logo-mini">📻</div>`;
 
                 item.innerHTML = `
-                    <div class="actions">
-                        <span class="drag-handle" title="Перетягнути">⋮⋮</span>
-                    </div>
                     <div class="station-info">
                         ${logoContent}
                         <span class="station-name">${station.name}</span>
@@ -604,39 +588,13 @@
                     </div>
                 `;
 
-                item.addEventListener('dragstart', () => {
-                    draggedIndex = index;
-                    setTimeout(() => item.classList.add('dragging'), 0);
-                });
-
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('dragging');
-                    draggedIndex = null;
-                    localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
-                    renderPlaylist();
-                });
-
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                });
-
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (draggedIndex === null || draggedIndex === index) return;
-
-                    const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
-                    
-                    const movedItem = stationsList.splice(draggedIndex, 1)[0];
-                    stationsList.splice(index, 0, movedItem);
-
-                    if (activeStream) {
-                        currentIndex = stationsList.findIndex(s => s.stream === activeStream);
-                    }
-                    draggedIndex = index;
-                });
-
                 item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
+                item.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    playStation(index);
+                });
                 item.addEventListener('click', () => playStation(index));
+                
                 playlistContainer.appendChild(item);
             });
         }
@@ -691,7 +649,6 @@
             renderPlaylist();
         });
 
-        // Надійне спрацьовування кнопок вперед/назад під мобільні пристрої та Telegram
         function handlePrev(e) {
             e.preventDefault();
             if (!stationsList.length) return;
@@ -706,11 +663,11 @@
             playStation(next);
         }
 
-        prevButton.addEventListener('click', handlePrev);
         prevButton.addEventListener('touchend', handlePrev);
+        prevButton.addEventListener('click', handlePrev);
 
-        nextButton.addEventListener('click', handleNext);
         nextButton.addEventListener('touchend', handleNext);
+        nextButton.addEventListener('click', handleNext);
 
         addBtn.addEventListener('click', () => {
             const name = document.getElementById('custom-name').value.trim();

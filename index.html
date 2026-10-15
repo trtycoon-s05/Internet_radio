@@ -97,7 +97,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-main); color: var(--accent);
-            text-align: center; padding: 16px; margin: 0; user-select: none;
+            text-align: center; padding: 12px; margin: 0; user-select: none;
             display: flex; flex-direction: column; min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
@@ -105,7 +105,7 @@
 
         .skin-selector {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; background: var(--bg-card); padding: 8px 12px;
+            margin-bottom: 10px; background: var(--bg-card); padding: 8px 12px;
             border-radius: 10px; border: 1px solid var(--border-color);
         }
         .skin-selector label { font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
@@ -116,7 +116,7 @@
 
         .custom-editor {
             background: var(--bg-card); border: 1px solid var(--border-color);
-            padding: 12px; border-radius: 10px; margin-bottom: 12px; display: none;
+            padding: 12px; border-radius: 10px; margin-bottom: 10px; display: none;
             flex-direction: column; gap: 8px; text-align: left;
         }
         .custom-editor.active { display: flex; }
@@ -133,14 +133,14 @@
 
         /* Головний екран */
         .screen {
-            background: #000000; padding: 14px; border-radius: 14px;
-            margin-bottom: 16px; border: 1px solid var(--border-color);
+            background: #000000; padding: 12px; border-radius: 14px;
+            margin-bottom: 12px; border: 1px solid var(--border-color);
             box-shadow: 0 4px 20px var(--accent-glow);
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
 
         .station-title {
-            font-size: 16px; font-weight: 800; word-break: break-word; text-align: center;
+            font-size: 15px; font-weight: 800; word-break: break-word; text-align: center;
             letter-spacing: 1.2px; color: var(--text-main); text-transform: uppercase;
             width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
@@ -149,11 +149,10 @@
             display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px;
         }
 
-        /* Піксельний спектр по боках з градієнтом знизу вгору */
         .spectrum-side {
             background: #030303; padding: 4px 5px; border-radius: 8px;
             border: 1px solid #1a1a1a; display: flex; gap: 2px;
-            flex: 1; height: 96px; align-items: flex-end; justify-content: center;
+            flex: 1; height: 86px; align-items: flex-end; justify-content: center;
         }
 
         .spectrum-col {
@@ -161,11 +160,10 @@
         }
 
         .spectrum-pixel {
-            width: 100%; height: 16px; background-color: #121212; border-radius: 1px;
+            width: 100%; height: 14px; background-color: #121212; border-radius: 1px;
             transition: background-color 0.05s ease, box-shadow 0.05s ease;
         }
 
-        /* Градієнт пікселів знизу вгору: від фіолетового до червоного */
         .spectrum-pixel.row-0.lit { background-color: #311b92; box-shadow: 0 0 3px #311b92; }
         .spectrum-pixel.row-1.lit { background-color: #0288d1; box-shadow: 0 0 3px #0288d1; }
         .spectrum-pixel.row-2.lit { background-color: #00897b; box-shadow: 0 0 3px #00897b; }
@@ -178,19 +176,20 @@
         }
 
         .station-logo {
-            width: 96px; height: 96px; border-radius: 12px; object-fit: cover; background: #080808;
-            border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 38px;
+            width: 86px; height: 86px; border-radius: 12px; object-fit: cover; background: #080808;
+            border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 34px;
         }
         .station-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
 
         .controls-grid {
-            display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 12px;
+            display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px;
         }
         .btn-ctrl {
             background-color: var(--bg-card); color: var(--accent);
-            border: 1px solid var(--border-color); padding: 10px;
+            border: 1px solid var(--border-color); padding: 12px 10px;
             border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            touch-action: manipulation;
         }
         .btn-ctrl:active { transform: scale(0.95); }
         .btn-stop {
@@ -200,30 +199,32 @@
 
         .vol-box {
             background: var(--bg-card); padding: 10px 14px; border-radius: 10px;
-            margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color);
+            margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .vol-box label { font-size: 11px; font-weight: bold; color: var(--text-muted); white-space: nowrap; }
         .vol-box input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
-        h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 8px 0; text-align: left; }
+        h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 6px 0; text-align: left; }
 
         .playlist {
-            background-color: var(--bg-card); border-radius: 12px; overflow-y: auto;
-            text-align: left; border: 1px solid var(--border-color); max-height: 38vh; margin-bottom: 16px;
+            background-color: var(--bg-card); border-radius: 12px; 
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            text-align: left; border: 1px solid var(--border-color); 
+            max-height: 32vh; margin-bottom: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            touch-action: pan-y;
         }
         .station-item {
             padding: 8px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
-            touch-action: none;
             transition: background-color 0.2s, opacity 0.2s;
         }
         .station-item:last-child { border-bottom: none; }
         .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
         .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
         
-        .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
+        .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; pointer-events: none; }
         .station-logo-mini {
             width: 26px; height: 26px; border-radius: 6px; object-fit: cover; background: var(--bg-input);
             display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
@@ -233,24 +234,24 @@
         .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
+        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 4px 6px; font-weight: bold; touch-action: none; }
         .drag-handle:active { cursor: grabbing; }
-        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 14px; }
+        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 14px; padding: 4px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
-        .btn-del { color: var(--btn-stop-color); font-size: 13px; opacity: 0.6; cursor: pointer; }
+        .btn-del { color: var(--btn-stop-color); font-size: 13px; opacity: 0.6; cursor: pointer; padding: 4px; }
 
         .add-box {
-            background: var(--bg-card); padding: 12px; border-radius: 12px;
-            margin-bottom: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
+            background: var(--bg-card); padding: 10px; border-radius: 12px;
+            margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .add-box input {
             background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 10px; color: var(--text-main); font-size: 13px; outline: none;
+            padding: 9px; color: var(--text-main); font-size: 13px; outline: none;
         }
         .btn-add {
             background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--border-color);
-            padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+            padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
         }
         #toast {
             visibility: hidden; min-width: 200px; background-color: var(--bg-card); color: var(--accent);
@@ -511,7 +512,6 @@
             localStorage.setItem('radio_volume', this.value);
         });
 
-        // Енергійна анімація спектра з повним розмахом до верхніх піків
         function startSpectrumAnimation() {
             if (spectrumInterval) return;
 
@@ -530,7 +530,7 @@
 
         function updateHighCols(cols, volume) {
             cols.forEach((pixels) => {
-                let activeRows = Math.floor(Math.random() * (ROWS_COUNT / volume)) + 1;
+                let activeRows = Math.floor(Math.random() * (ROWS_COUNT * volume)) + 1;
                 if (activeRows > ROWS_COUNT) activeRows = ROWS_COUNT;
                 if (activeRows < 1) activeRows = 1;
 
@@ -691,17 +691,26 @@
             renderPlaylist();
         });
 
-        prevButton.addEventListener('click', () => {
+        // Надійне спрацьовування кнопок вперед/назад під мобільні пристрої та Telegram
+        function handlePrev(e) {
+            e.preventDefault();
             if (!stationsList.length) return;
             let next = currentIndex - 1 < 0 ? stationsList.length - 1 : currentIndex - 1;
             playStation(next);
-        });
+        }
 
-        nextButton.addEventListener('click', () => {
+        function handleNext(e) {
+            e.preventDefault();
             if (!stationsList.length) return;
             let next = currentIndex + 1 >= stationsList.length ? 0 : currentIndex + 1;
             playStation(next);
-        });
+        }
+
+        prevButton.addEventListener('click', handlePrev);
+        prevButton.addEventListener('touchend', handlePrev);
+
+        nextButton.addEventListener('click', handleNext);
+        nextButton.addEventListener('touchend', handleNext);
 
         addBtn.addEventListener('click', () => {
             const name = document.getElementById('custom-name').value.trim();

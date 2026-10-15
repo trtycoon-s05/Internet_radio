@@ -607,6 +607,38 @@
             }
         }
 
+        // Оновлення медіа-сесії для фонового режиму iPhone (блокування екрана)
+        function updateMediaSession(station) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: station ? station.name : "INTERNET RADIO PRO",
+                    artist: "Інтернет Радіо",
+                    album: "Live Stream",
+                    artwork: station && station.logo ? [{ src: station.logo, sizes: '512x512', type: 'image/jpeg' }] : []
+                });
+
+                navigator.mediaSession.setActionHandler('previoustrack', () => {
+                    handlePrev(new Event('click'));
+                });
+
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    handleNext(new Event('click'));
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => {
+                    player.play();
+                    isPlaying = true;
+                    startSpectrumAnimation();
+                });
+
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    player.pause();
+                    isPlaying = false;
+                    stopSpectrumAnimation();
+                });
+            }
+        }
+
         function playStation(index) {
             if (index < 0 || index >= stationsList.length) return;
 
@@ -621,6 +653,7 @@
             statusText.innerText = station.name.toUpperCase();
 
             updateDisplayVisuals(station);
+            updateMediaSession(station);
 
             player.pause();
             player.src = station.stream;
@@ -647,6 +680,9 @@
             updateDisplayVisuals(null);
             stopSpectrumAnimation();
             renderPlaylist();
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = null;
+            }
         });
 
         function handlePrev(e) {

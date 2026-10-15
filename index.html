@@ -6,6 +6,20 @@
     <title>INTERNET RADIO PRO</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-main: #0d0d0d;
+            --bg-card: #141414;
+            --bg-input: #0a0a0a;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.25);
+            --accent-soft: rgba(0, 255, 136, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: #222222;
+            --btn-stop-bg: #2a1113;
+            --btn-stop-color: #ff4d4d;
+        }
+
         body[data-theme="cyberpunk"] {
             --bg-main: #0d0d0d; --bg-card: #141414; --bg-input: #0a0a0a;
             --accent: #00ff88; --accent-glow: rgba(0, 255, 136, 0.25); --accent-soft: rgba(0, 255, 136, 0.1);
@@ -78,18 +92,6 @@
             --text-main: #ffe4e6; --text-muted: #fda4af; --border-color: #881337;
             --btn-stop-bg: #2b0b11; --btn-stop-color: #fb7185;
         }
-        body[data-theme="custom"] {
-            --bg-main: var(--custom-bg, #111111);
-            --bg-card: var(--custom-card, #1c1c1c);
-            --bg-input: var(--custom-input, #080808);
-            --accent: var(--custom-accent, #00ffcc);
-            --accent-glow: var(--custom-glow, rgba(0, 255, 204, 0.3));
-            --accent-soft: var(--custom-soft, rgba(0, 255, 204, 0.15));
-            --text-main: var(--custom-text, #ffffff);
-            --text-muted: var(--custom-muted, #999999);
-            --border-color: var(--custom-border, #333333);
-            --btn-stop-bg: #2a1113; --btn-stop-color: #ff4d4d;
-        }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -124,43 +126,62 @@
         .color-picker-row input[type="color"] {
             border: none; width: 32px; height: 24px; background: none; cursor: pointer; border-radius: 4px;
         }
+        .btn-apply-skin {
+            background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--border-color);
+            padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 4px; text-align: center;
+        }
 
+        /* Головний екран */
         .screen {
-            background: #000000; padding: 14px 12px; border-radius: 14px;
-            font-weight: 700; margin-bottom: 16px; border: 1px solid var(--border-color);
-            box-shadow: 0 4px 20px var(--accent-glow); display: flex; flex-direction: column; gap: 8px;
-        }
-        .station-title {
-            font-size: 13px; word-break: break-word; text-align: center;
-            letter-spacing: 1px; color: var(--text-main); text-transform: uppercase;
-        }
-        .track-title {
-            font-size: 11px; color: var(--accent); opacity: 0.85;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 14px;
+            background: #000000; padding: 14px; border-radius: 14px;
+            margin-bottom: 16px; border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
 
-        .spectrum-panel {
-            background: #030303; padding: 10px 12px; border-radius: 10px;
-            border: 1px solid #1a1a1a; display: flex; justify-content: center; align-items: center;
+        .station-title {
+            font-size: 16px; font-weight: 800; word-break: break-word; text-align: center;
+            letter-spacing: 1.2px; color: var(--text-main); text-transform: uppercase;
+            width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .ecg-grid {
-            display: flex; flex-direction: column; gap: 2px; width: 100%; height: 55px;
-            justify-content: center; background: #050505; padding: 4px; border-radius: 6px;
+
+        .screen-middle-row {
+            display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px;
         }
-        .ecg-row {
-            display: flex; gap: 2px; height: 6px; width: 100%; justify-content: center;
+
+        /* Піксельний спектр по боках з градієнтом знизу вгору */
+        .spectrum-side {
+            background: #030303; padding: 4px 5px; border-radius: 8px;
+            border: 1px solid #1a1a1a; display: flex; gap: 2px;
+            flex: 1; height: 96px; align-items: flex-end; justify-content: center;
         }
-        .ecg-pixel {
-            flex: 1; background-color: #121212; border-radius: 1px;
+
+        .spectrum-col {
+            display: flex; flex-direction: column-reverse; gap: 2px; flex: 1; height: 100%; justify-content: flex-start;
+        }
+
+        .spectrum-pixel {
+            width: 100%; height: 16px; background-color: #121212; border-radius: 1px;
             transition: background-color 0.05s ease, box-shadow 0.05s ease;
         }
 
-        /* Багатокольоровий спектр за рівнем висоти (знизу вгору: фіолетовий -> синій -> зелений -> жовтий -> червоний) */
-        .ecg-row.row-0 .ecg-pixel.lit { background-color: #a855f7; box-shadow: 0 0 5px #a855f7; } /* Низ: Фіолетовий */
-        .ecg-row.row-1 .ecg-pixel.lit { background-color: #3b82f6; box-shadow: 0 0 5px #3b82f6; } /* Синій */
-        .ecg-row.row-2 .ecg-pixel.lit { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; } /* Середина: Зелений */
-        .ecg-row.row-3 .ecg-pixel.lit { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; } /* Високі: Жовтий */
-        .ecg-row.row-4 .ecg-pixel.lit { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; } /* Піки: Червоний */
+        /* Градієнт пікселів знизу вгору: від фіолетового до червоного */
+        .spectrum-pixel.row-0.lit { background-color: #311b92; box-shadow: 0 0 3px #311b92; }
+        .spectrum-pixel.row-1.lit { background-color: #0288d1; box-shadow: 0 0 3px #0288d1; }
+        .spectrum-pixel.row-2.lit { background-color: #00897b; box-shadow: 0 0 3px #00897b; }
+        .spectrum-pixel.row-3.lit { background-color: #fbc02d; box-shadow: 0 0 4px #fbc02d; }
+        .spectrum-pixel.row-4.lit { background-color: #f57c00; box-shadow: 0 0 4px #f57c00; }
+        .spectrum-pixel.row-5.lit { background-color: #d32f2f; box-shadow: 0 0 5px #d32f2f; }
+
+        .screen-info-center {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+
+        .station-logo {
+            width: 96px; height: 96px; border-radius: 12px; object-fit: cover; background: #080808;
+            border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 38px;
+        }
+        .station-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
 
         .controls-grid {
             display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 12px;
@@ -169,6 +190,7 @@
             background-color: var(--bg-card); color: var(--accent);
             border: 1px solid var(--border-color); padding: 10px;
             border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .btn-ctrl:active { transform: scale(0.95); }
         .btn-stop {
@@ -179,6 +201,7 @@
         .vol-box {
             background: var(--bg-card); padding: 10px 14px; border-radius: 10px;
             margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .vol-box label { font-size: 11px; font-weight: bold; color: var(--text-muted); white-space: nowrap; }
         .vol-box input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
@@ -188,9 +211,10 @@
         .playlist {
             background-color: var(--bg-card); border-radius: 12px; overflow-y: auto;
             text-align: left; border: 1px solid var(--border-color); max-height: 38vh; margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .station-item {
-            padding: 10px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer;
+            padding: 8px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
             touch-action: none;
             transition: background-color 0.2s, opacity 0.2s;
@@ -198,10 +222,18 @@
         .station-item:last-child { border-bottom: none; }
         .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
         .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
+        
+        .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
+        .station-logo-mini {
+            width: 26px; height: 26px; border-radius: 6px; object-fit: cover; background: var(--bg-input);
+            display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+            border: 1px solid var(--border-color);
+        }
+        .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
         .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 4px; font-weight: bold; }
+        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
         .drag-handle:active { cursor: grabbing; }
         .btn-fav { cursor: pointer; opacity: 0.3; font-size: 14px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
@@ -210,6 +242,7 @@
         .add-box {
             background: var(--bg-card); padding: 12px; border-radius: 12px;
             margin-bottom: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .add-box input {
             background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px;
@@ -234,8 +267,6 @@
         <div class="skin-selector">
             <label for="theme-select">🎨 СКІН ОФОРМЛЕННЯ:</label>
             <select id="theme-select">
-                <option value="random">🎲 Random Skin</option>
-                <option value="custom">✏️ Свій скін (Кастом)</option>
                 <option value="cyberpunk">Cyberpunk (Neon)</option>
                 <option value="synthwave">Synthwave (80s)</option>
                 <option value="oled">OLED Black</option>
@@ -248,6 +279,8 @@
                 <option value="emerald-glass">Emerald Glass</option>
                 <option value="purple-haze">Purple Haze</option>
                 <option value="crimson-blood">Crimson Blood</option>
+                <option value="random">🎲 Random Skin</option>
+                <option value="custom">✏️ Свій скін (Кастом)</option>
             </select>
         </div>
 
@@ -256,13 +289,20 @@
             <div class="color-picker-row"><span>Колір карток:</span><input type="color" id="cp-card" value="#1c1c1c"></div>
             <div class="color-picker-row"><span>Неоновий акцент:</span><input type="color" id="cp-accent" value="#00ffcc"></div>
             <div class="color-picker-row"><span>Головний текст:</span><input type="color" id="cp-text" value="#ffffff"></div>
+            <button class="btn-apply-skin" id="btn-apply-skin">✓ ЗБЕРЕГТИ ТА СХОВАТИ</button>
         </div>
 
+        <!-- Екран -->
         <div class="screen">
-            <span class="station-title" id="status">ОБЕРІТЬ СТАНЦІЮ</span>
-            <span class="track-title" id="current-track">Прямий ефір</span>
-            <div class="spectrum-panel">
-                <div class="ecg-grid" id="ecg-grid"></div>
+            <div class="station-title" id="status">ОБЕРІТЬ СТАНЦІЮ</div>
+            <div class="screen-middle-row">
+                <div class="spectrum-side" id="left-spectrum"></div>
+                <div class="screen-info-center">
+                    <div id="screen-logo-container">
+                        <div class="station-logo">📻</div>
+                    </div>
+                </div>
+                <div class="spectrum-side" id="right-spectrum"></div>
             </div>
         </div>
         
@@ -284,6 +324,7 @@
         <div class="add-box">
             <input type="text" id="custom-name" placeholder="Назва станції">
             <input type="url" id="custom-url" placeholder="URL потоку (https://...)">
+            <input type="url" id="custom-logo" placeholder="URL логотипу (необов'язково)">
             <button class="btn-add" id="add-btn">+ ДОДАТИ СТАНЦІЮ</button>
         </div>
     </div>
@@ -292,12 +333,36 @@
     <audio id="audio-player" preload="auto"></audio>
 
     <script>
-        const ECG_ROWS = 5;
-        const ECG_COLS = 32;
-        const ecgGrid = document.getElementById('ecg-grid');
-        const gridPixels = [];
-        const currentTrackEl = document.getElementById('current-track');
+        const COLS_COUNT = 4; 
+        const ROWS_COUNT = 6; 
+        
+        const leftSpectrumEl = document.getElementById('left-spectrum');
+        const rightSpectrumEl = document.getElementById('right-spectrum');
+        const leftCols = [];
+        const rightCols = [];
+
+        function createPixelSpectrum(container, colsArray) {
+            for (let c = 0; c < COLS_COUNT; c++) {
+                const colEl = document.createElement('div');
+                colEl.className = 'spectrum-col';
+                const pixels = [];
+                for (let r = 0; r < ROWS_COUNT; r++) {
+                    const px = document.createElement('div');
+                    px.className = `spectrum-pixel row-${r}`;
+                    colEl.appendChild(px);
+                    pixels.push(px);
+                }
+                container.appendChild(colEl);
+                colsArray.push(pixels);
+            }
+        }
+
+        createPixelSpectrum(leftSpectrumEl, leftCols);
+        createPixelSpectrum(rightSpectrumEl, rightCols);
+
         const customEditor = document.getElementById('custom-editor');
+        const screenLogoContainer = document.getElementById('screen-logo-container');
+        const btnApplySkin = document.getElementById('btn-apply-skin');
 
         const availableThemes = [
             "cyberpunk", "synthwave", "oled", "retro", "matrix", 
@@ -305,40 +370,26 @@
             "purple-haze", "crimson-blood"
         ];
 
-        for (let r = 0; r < ECG_ROWS; r++) {
-            const rowEl = document.createElement('div');
-            rowEl.className = `ecg-row row-${r}`;
-            const rowPixels = [];
-            for (let c = 0; c < ECG_COLS; c++) {
-                const px = document.createElement('div');
-                px.className = 'ecg-pixel';
-                rowEl.appendChild(px);
-                rowPixels.push(px);
-            }
-            ecgGrid.appendChild(rowEl);
-            gridPixels.push(rowPixels);
-        }
-
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128" },
-            { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq" },
-            { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv" },
-            { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1" },
-            { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1" },
-            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd" },
-            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/lux-fm-dance-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1" },
-            { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1" },
-            { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1" },
-            { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1" },
-            { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio" },
-            { name: "Радіо Європа +", stream: "https://s5.radioforge.com:7908/live?npa=1" },
-            { name: "Радіо Dance FM", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1" },
-            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1" }
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128", logo: "https://slukhay.com/uploads/2026/3/9/05be7ad9-6e41-4bcd-82f9-680db9802a8e.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq", logo: "https://slukhay.com/uploads/2025/6/26/84ac3186-255b-4331-a289-7c48923dc1f4.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Перець ФМ", stream: "https://stream.zeno.fm/4slhrw6vbyduv", logo: "https://slukhay.com/uploads/2025/6/26/c3faf022-3c69-4ab1-a18b-31cef76465fe.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1", logo: "https://slukhay.com/uploads/2026/5/21/c6b6edf7-94cf-436c-9c05-c32584460bc3.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/9/16/357f0be7-4ecf-4a44-a3c2-656e8b0224dd.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/13581b85-d113-45fa-8784-12c11c3640b7.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd", logo: "https://slukhay.com/uploads/2026/2/3/0fc2953e-4564-4e15-8368-4600ac738071.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/0e404084-9364-4afb-a3ee-709d3ea0fcae.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/5/963f96f1-039c-4bdd-b2af-8d64975f8123.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/17d5d5ad-928a-4dc1-aed5-f86babdea9b4.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/a1200b2f-4914-4430-81cf-d6d4b6bf6f73.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/22/e690a727-199f-4112-bab8-8711fedb98fc.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/8/6e3b3fe4-de03-451a-b56f-78795766c2eb.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/917d6303-c472-47ee-bf53-55b79e65dc48.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1", logo: "https://slukhay.com/uploads/2026/4/22/9f130198-c035-4576-9975-6d84ecbd3d6f.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio", logo: "https://slukhay.com/uploads/2025/6/26/d77c72e5-1065-4ed0-9b50-2191604e8f12.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Radio Прищепкін TOP40 UA", stream: "https://aac.prischepkin.com:8443/radio?npa=1", logo: "https://slukhay.com/uploads/2026/3/18/955f4d5f-7fe9-4819-be5c-2c238a691564.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Dance FM", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/7/24/7ad86781-535a-40b0-99f5-0d673a79618e.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/10/ff2ae5a4-7b52-42a0-8722-7f418062b840.png?w=256&h=256&fit=cover&output=webp&q=85" }
         ];
 
         let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
@@ -357,8 +408,7 @@
 
         let currentIndex = -1;
         let isPlaying = false;
-        let ecgInterval = null;
-        let waveStep = 0;
+        let spectrumInterval = null;
 
         const player = document.getElementById('audio-player');
         const statusText = document.getElementById('status');
@@ -383,16 +433,16 @@
         }
 
         function applyCustomColors(bg, card, accent, text) {
-            const root = document.body.style;
-            root.setProperty('--custom-bg', bg);
-            root.setProperty('--custom-card', card);
-            root.setProperty('--custom-input', bg);
-            root.setProperty('--custom-accent', accent);
-            root.setProperty('--custom-glow', hexToRgba(accent, 0.3));
-            root.setProperty('--custom-soft', hexToRgba(accent, 0.15));
-            root.setProperty('--custom-text', text);
-            root.setProperty('--custom-muted', text);
-            root.setProperty('--custom-border', hexToRgba(accent, 0.3));
+            const root = document.documentElement.style;
+            root.setProperty('--bg-main', bg);
+            root.setProperty('--bg-card', card);
+            root.setProperty('--bg-input', bg);
+            root.setProperty('--accent', accent);
+            root.setProperty('--accent-glow', hexToRgba(accent, 0.3));
+            root.setProperty('--accent-soft', hexToRgba(accent, 0.15));
+            root.setProperty('--text-main', text);
+            root.setProperty('--text-muted', text);
+            root.setProperty('--border-color', hexToRgba(accent, 0.3));
         }
 
         function loadCustomSettings() {
@@ -418,6 +468,12 @@
             el.addEventListener('input', saveCustomSettings);
         });
 
+        btnApplySkin.addEventListener('click', () => {
+            saveCustomSettings();
+            customEditor.classList.remove('active');
+            showToast("Скін збережено!");
+        });
+
         function applyTheme(themeName) {
             if (themeName === 'random') {
                 customEditor.classList.remove('active');
@@ -433,7 +489,8 @@
             }
         }
 
-        const savedTheme = localStorage.getItem('radio_skin') || 'cyberpunk';
+        let savedTheme = localStorage.getItem('radio_skin') || 'cyberpunk';
+        if (savedTheme === 'cassette') savedTheme = 'cyberpunk';
         themeSelect.value = savedTheme;
         applyTheme(savedTheme);
 
@@ -454,46 +511,47 @@
             localStorage.setItem('radio_volume', this.value);
         });
 
-        function startVisualizer() {
-            if (ecgInterval) return;
-            waveStep = 0;
+        // Енергійна анімація спектра з повним розмахом до верхніх піків
+        function startSpectrumAnimation() {
+            if (spectrumInterval) return;
 
-            ecgInterval = setInterval(() => {
+            spectrumInterval = setInterval(() => {
                 if (!isPlaying || player.paused) {
-                    stopVisualizer();
+                    stopSpectrumAnimation();
                     return;
                 }
 
-                waveStep++;
+                let vol = player.muted ? 0 : player.volume;
 
-                for (let r = 0; r < ECG_ROWS; r++) {
-                    for (let c = 0; c < ECG_COLS; c++) {
-                        let centerRow = Math.floor(ECG_ROWS / 2);
-                        let waveVal = Math.sin((c + waveStep) * 0.3) * Math.cos((c + waveStep) * 0.1);
-                        let targetRow = centerRow + Math.round(waveVal * 1.5);
-                        
-                        if (Math.random() > 0.85) {
-                            targetRow += (Math.random() > 0.5 ? 1 : -1);
-                        }
-
-                        targetRow = Math.max(0, Math.min(ECG_ROWS - 1, targetRow));
-
-                        if (r === targetRow) {
-                            gridPixels[r][c].classList.add('lit');
-                        } else {
-                            gridPixels[r][c].classList.remove('lit');
-                        }
-                    }
-                }
-            }, 70);
+                updateHighCols(leftCols, vol);
+                updateHighCols(rightCols, vol);
+            }, 85);
         }
 
-        function stopVisualizer() {
-            if (ecgInterval) {
-                clearInterval(ecgInterval);
-                ecgInterval = null;
+        function updateHighCols(cols, volume) {
+            cols.forEach((pixels) => {
+                let activeRows = Math.floor(Math.random() * (ROWS_COUNT / volume)) + 1;
+                if (activeRows > ROWS_COUNT) activeRows = ROWS_COUNT;
+                if (activeRows < 1) activeRows = 1;
+
+                pixels.forEach((px, rIndex) => {
+                    if (rIndex < activeRows) px.classList.add('lit');
+                    else px.classList.remove('lit');
+                });
+            });
+        }
+
+        function stopSpectrumAnimation() {
+            if (spectrumInterval) {
+                clearInterval(spectrumInterval);
+                spectrumInterval = null;
             }
-            gridPixels.forEach(row => row.forEach(px => px.classList.remove('lit')));
+            [...leftCols, ...rightCols].forEach(pixels => {
+                pixels.forEach((px, rIndex) => {
+                    if (rIndex === 0) px.classList.add('lit');
+                    else px.classList.remove('lit');
+                });
+            });
         }
 
         function showToast(message) {
@@ -527,11 +585,18 @@
                 const isFav = favorites.includes(station.stream);
                 const isCustom = customStations.some(s => s.stream === station.stream);
 
+                const logoContent = station.logo 
+                    ? `<img src="${station.logo}" class="station-logo-mini" onerror="this.outerHTML='<div class=\'station-logo-mini\'>📻</div>'">`
+                    : `<div class="station-logo-mini">📻</div>`;
+
                 item.innerHTML = `
                     <div class="actions">
                         <span class="drag-handle" title="Перетягнути">⋮⋮</span>
                     </div>
-                    <span class="station-name">${station.name}</span>
+                    <div class="station-info">
+                        ${logoContent}
+                        <span class="station-name">${station.name}</span>
+                    </div>
                     <div class="actions">
                         <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
                         ${isCustom ? `<span class="btn-del" onclick="event.stopPropagation(); deleteCustomStation('${station.stream}')">✖</span>` : ''}
@@ -539,7 +604,7 @@
                     </div>
                 `;
 
-                item.addEventListener('dragstart', (e) => {
+                item.addEventListener('dragstart', () => {
                     draggedIndex = index;
                     setTimeout(() => item.classList.add('dragging'), 0);
                 });
@@ -576,6 +641,14 @@
             });
         }
 
+        function updateDisplayVisuals(station) {
+            if (station && station.logo) {
+                screenLogoContainer.innerHTML = `<img src="${station.logo}" class="station-logo" onerror="this.parentElement.innerHTML='<div class=\\'station-logo\\'>📻</div>'">`;
+            } else {
+                screenLogoContainer.innerHTML = `<div class="station-logo">📻</div>`;
+            }
+        }
+
         function playStation(index) {
             if (index < 0 || index >= stationsList.length) return;
 
@@ -587,40 +660,34 @@
             }
 
             renderPlaylist();
-            statusText.innerText = "ПІДКЛЮЧЕННЯ...";
-            currentTrackEl.innerText = station.name;
+            statusText.innerText = station.name.toUpperCase();
+
+            updateDisplayVisuals(station);
 
             player.pause();
             player.src = station.stream;
             player.load();
 
             isPlaying = true;
-            stopVisualizer();
+            stopSpectrumAnimation();
 
             player.play().then(() => {
-                statusText.innerText = "ГРАЄ: " + station.name.toUpperCase();
+                startSpectrumAnimation();
             }).catch(() => {
                 statusText.innerText = "ПОМИЛКА ПОТОКУ";
-                currentTrackEl.innerText = "Спробуйте запустити знову";
                 isPlaying = false;
-                stopVisualizer();
+                stopSpectrumAnimation();
             });
         }
-
-        player.addEventListener('playing', () => {
-            if (isPlaying) {
-                startVisualizer();
-            }
-        });
 
         stopButton.addEventListener('click', () => {
             player.pause();
             player.src = "";
             currentIndex = -1;
             isPlaying = false;
-            statusText.innerText = "ЗУПИНЕНО";
-            currentTrackEl.innerText = "";
-            stopVisualizer();
+            statusText.innerText = "ОБЕРІТЬ СТАНЦІЮ";
+            updateDisplayVisuals(null);
+            stopSpectrumAnimation();
             renderPlaylist();
         });
 
@@ -639,20 +706,22 @@
         addBtn.addEventListener('click', () => {
             const name = document.getElementById('custom-name').value.trim();
             const stream = document.getElementById('custom-url').value.trim();
+            const logo = document.getElementById('custom-logo').value.trim();
 
             if (!name || !stream) {
                 showToast("Заповніть назву та URL");
                 return;
             }
 
-            customStations.push({ name, stream });
-            stationsList.push({ name, stream });
+            customStations.push({ name, stream, logo });
+            stationsList.push({ name, stream, logo });
 
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
             localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
 
             document.getElementById('custom-name').value = '';
             document.getElementById('custom-url').value = '';
+            document.getElementById('custom-logo').value = '';
             showToast("Станцію додано!");
             renderPlaylist();
         });

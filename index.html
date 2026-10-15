@@ -213,13 +213,16 @@
             text-align: left; border: 1px solid var(--border-color); 
             max-height: 32vh; margin-bottom: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            touch-action: pan-y;
         }
         .station-item {
             padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
+            transition: opacity 0.2s, background-color 0.2s;
         }
         .station-item:last-child { border-bottom: none; }
         .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
+        .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
         
         .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; pointer-events: none; }
         .station-logo-mini {
@@ -230,7 +233,9 @@
         .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
         .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
+        .drag-handle:active { cursor: grabbing; }
         .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
         .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.6; cursor: pointer; padding: 4px; }
@@ -313,7 +318,7 @@
             <input type="range" id="volume-slider" min="0" max="100" value="70">
         </div>
 
-        <h3>Список радіостанцій</h3>
+        <h3>Список радіостанцій (тягніть за ⋮⋮)</h3>
         <div class="playlist" id="playlist"></div>
 
         <h3>Додати станцію</h3>
@@ -562,11 +567,14 @@
             renderPlaylist();
         }
 
+        let draggedIndex = null;
+
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
             stationsList.forEach((station, index) => {
                 const item = document.createElement('div');
                 item.className = 'station-item' + (index === currentIndex ? ' active' : '');
+                item.setAttribute('draggable', 'true');
                 item.dataset.index = index;
 
                 const isFav = favorites.includes(station.stream);
@@ -577,6 +585,9 @@
                     : `<div class="station-logo-mini">📻</div>`;
 
                 item.innerHTML = `
+                    <div class="actions">
+                        <span class="drag-handle" title="Перетягнути">⋮⋮</span>
+                    </div>
                     <div class="station-info">
                         ${logoContent}
                         <span class="station-name">${station.name}</span>
@@ -588,12 +599,59 @@
                     </div>
                 `;
 
-                item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
-                item.addEventListener('touchend', (e) => {
+                // Drag & Drop для браузерів/ПК
+                item.addEventListener('dragstart', () => {
+                    draggedIndex = index;
+                    setTimeout(() => item.classList.add('dragging'), 0);
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    draggedIndex = null;
+                    localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+                    renderPlaylist();
+                });
+
+                item.addEventListener('dragover', (e) => {
                     e.preventDefault();
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedIndex === null || draggedIndex === index) return;
+
+                    const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
+                    
+                    const movedItem = stationsList.splice(draggedIndex, 1)[0];
+                    stationsList.splice(index, 0, movedItem);
+
+                    if (activeStream) {
+                        currentIndex = stationsList.findIndex(s => s.stream === activeStream);
+                    }
+                    draggedIndex = index;
+                });
+
+                item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
+
+                // Захист скролу від випадкових кліків на iPhone
+                let startX = 0, startY = 0;
+                item.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+
+                item.addEventListener('touchend', (e) => {
+                    let endX = e.changedTouches[0].clientX;
+                    let endY = e.changedTouches[0].clientY;
+                    if (Math.abs(endX - startX) < 8 && Math.abs(endY - startY) < 8) {
+                        e.preventDefault();
+                        playStation(index);
+                    }
+                });
+
+                item.addEventListener('click', () => {
                     playStation(index);
                 });
-                item.addEventListener('click', () => playStation(index));
                 
                 playlistContainer.appendChild(item);
             });
@@ -607,7 +665,6 @@
             }
         }
 
-        // Оновлення медіа-сесії для фонового режиму iPhone (блокування екрана)
         function updateMediaSession(station) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({

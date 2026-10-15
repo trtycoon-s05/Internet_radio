@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Налаштування для Safari та PWA на iPhone -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Radio Pro">
@@ -135,7 +134,6 @@
             padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 4px; text-align: center;
         }
 
-        /* Головний екран */
         .screen {
             background: #000000; padding: 12px; border-radius: 14px;
             margin-bottom: 12px; border: 1px solid var(--border-color);
@@ -603,7 +601,6 @@
                     </div>
                 `;
 
-                // Drag & Drop для браузерів/ПК
                 item.addEventListener('dragstart', () => {
                     draggedIndex = index;
                     setTimeout(() => item.classList.add('dragging'), 0);
@@ -637,7 +634,6 @@
 
                 item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
 
-                // Захист скролу від випадкових кліків на iPhone у Safari
                 let startX = 0, startY = 0;
                 item.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
@@ -669,7 +665,6 @@
             }
         }
 
-        // Повна підтримка MediaSession для Safari та Apple Watch
         function updateMediaSession(station) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -680,11 +675,20 @@
                 });
 
                 try {
+                    // Системні дії (у т.ч. кнопки перемикання у шторці / навушниках) перемикають станції
                     navigator.mediaSession.setActionHandler('previoustrack', () => {
                         handlePrev(new Event('click'));
                     });
 
                     navigator.mediaSession.setActionHandler('nexttrack', () => {
+                        handleNext(new Event('click'));
+                    });
+
+                    navigator.mediaSession.setActionHandler('seekbackward', () => {
+                        handlePrev(new Event('click'));
+                    });
+
+                    navigator.mediaSession.setActionHandler('seekforward', () => {
                         handleNext(new Event('click'));
                     });
 

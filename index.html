@@ -235,12 +235,13 @@
         .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
         .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
         .drag-handle:active { cursor: grabbing; }
         .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
-        .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.6; cursor: pointer; padding: 4px; }
+        .btn-edit { color: #3b82f6; font-size: 13px; cursor: pointer; padding: 4px; }
+        .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.8; cursor: pointer; padding: 4px; }
 
         .add-box {
             background: var(--bg-card); padding: 10px; border-radius: 12px;
@@ -251,10 +252,17 @@
             background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px;
             padding: 9px; color: var(--text-main); font-size: 13px; outline: none;
         }
+        .btn-row { display: flex; gap: 6px; }
         .btn-add {
             background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--border-color);
-            padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+            padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; flex: 1;
         }
+        .btn-cancel-edit {
+            background-color: var(--btn-stop-bg); color: var(--btn-stop-color); border: 1px solid var(--btn-stop-color);
+            padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; display: none;
+        }
+        .btn-cancel-edit.show { display: block; }
+
         #toast {
             visibility: hidden; min-width: 200px; background-color: var(--bg-card); color: var(--accent);
             border: 1px solid var(--border-color); text-align: center; border-radius: 8px; padding: 10px;
@@ -323,12 +331,15 @@
         <h3>Список радіостанцій (тягніть за ⋮⋮)</h3>
         <div class="playlist" id="playlist"></div>
 
-        <h3>Додати станцію</h3>
+        <h3 id="form-heading">Додати станцію</h3>
         <div class="add-box">
             <input type="text" id="custom-name" placeholder="Назва станції">
             <input type="url" id="custom-url" placeholder="URL потоку (https://...)">
             <input type="url" id="custom-logo" placeholder="URL логотипу (необов'язково)">
-            <button class="btn-add" id="add-btn">+ ДОДАТИ СТАНЦІЮ</button>
+            <div class="btn-row">
+                <button class="btn-add" id="add-btn">+ ДОДАТИ СТАНЦІЮ</button>
+                <button class="btn-cancel-edit" id="cancel-edit-btn">СКАСУВАТИ</button>
+            </div>
         </div>
     </div>
 
@@ -399,19 +410,33 @@
         let favorites = JSON.parse(localStorage.getItem('fav_radio_stations')) || [];
         
         let stationsList = [];
-        let seenStreams = new Set();
-
-        [...defaultStations, ...customStations].forEach(station => {
-            if (station && station.stream && !seenStreams.has(station.stream)) {
-                seenStreams.add(station.stream);
-                stationsList.push(station);
-            }
-        });
+        let savedOrder = JSON.parse(localStorage.getItem('radio_stations_order'));
+        
+        if (savedOrder && savedOrder.length > 0) {
+            let streamMap = new Map();
+            [...defaultStations, ...customStations].forEach(s => streamMap.set(s.stream, s));
+            savedOrder.forEach(s => {
+                if (streamMap.has(s.stream)) {
+                    stationsList.push(streamMap.get(s.stream));
+                    streamMap.delete(s.stream);
+                }
+            });
+            streamMap.forEach(s => stationsList.push(s));
+        } else {
+            let seenStreams = new Set();
+            [...defaultStations, ...customStations].forEach(station => {
+                if (station && station.stream && !seenStreams.has(station.stream)) {
+                    seenStreams.add(station.stream);
+                    stationsList.push(station);
+                }
+            });
+        }
         localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
 
         let currentIndex = -1;
         let isPlaying = false;
         let spectrumInterval = null;
+        let editingOriginalStream = null; // Поточний URL станції, що редагується
 
         const player = document.getElementById('audio-player');
         const statusText = document.getElementById('status');
@@ -421,7 +446,13 @@
         const nextButton = document.getElementById('next-btn');
         const playlistContainer = document.getElementById('playlist');
         const addBtn = document.getElementById('add-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const formHeading = document.getElementById('form-heading');
         const themeSelect = document.getElementById('theme-select');
+
+        const inputName = document.getElementById('custom-name');
+        const inputUrl = document.getElementById('custom-url');
+        const inputLogo = document.getElementById('custom-logo');
 
         const cpBg = document.getElementById('cp-bg');
         const cpCard = document.getElementById('cp-card');
@@ -596,7 +627,8 @@
                     </div>
                     <div class="actions">
                         <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
-                        ${isCustom ? `<span class="btn-del" onclick="event.stopPropagation(); deleteCustomStation('${station.stream}')">✖</span>` : ''}
+                        ${isCustom ? `<span class="btn-edit" onclick="event.stopPropagation(); startEditStation('${station.stream}')" title="Редагувати">✏️</span>` : ''}
+                        ${isCustom ? `<span class="btn-del" onclick="event.stopPropagation(); deleteCustomStation('${station.stream}')" title="Видалити">✖</span>` : ''}
                         <span>${index === currentIndex ? '🔊' : '▶'}</span>
                     </div>
                 `;
@@ -675,7 +707,6 @@
                 });
 
                 try {
-                    // Системні дії (у т.ч. кнопки перемикання у шторці / навушниках) перемикають станції
                     navigator.mediaSession.setActionHandler('previoustrack', () => {
                         handlePrev(new Event('click'));
                     });
@@ -775,30 +806,83 @@
         nextButton.addEventListener('touchend', handleNext);
         nextButton.addEventListener('click', handleNext);
 
+        window.startEditStation = function(streamUrl) {
+            const station = customStations.find(s => s.stream === streamUrl);
+            if (!station) return;
+
+            editingOriginalStream = streamUrl;
+            inputName.value = station.name;
+            inputUrl.value = station.stream;
+            inputLogo.value = station.logo || '';
+
+            formHeading.innerText = "Редагувати станцію";
+            addBtn.innerText = "💾 ЗБЕРЕГТИ ЗМІНИ";
+            cancelEditBtn.classList.add('show');
+            
+            // Плавний проскрол до форми редагування
+            formHeading.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        function resetForm() {
+            editingOriginalStream = null;
+            inputName.value = '';
+            inputUrl.value = '';
+            inputLogo.value = '';
+            formHeading.innerText = "Додати станцію";
+            addBtn.innerText = "+ ДОДАТИ СТАНЦІЮ";
+            cancelEditBtn.classList.remove('show');
+        }
+
+        cancelEditBtn.addEventListener('click', resetForm);
+
         addBtn.addEventListener('click', () => {
-            const name = document.getElementById('custom-name').value.trim();
-            const stream = document.getElementById('custom-url').value.trim();
-            const logo = document.getElementById('custom-logo').value.trim();
+            const name = inputName.value.trim();
+            const stream = inputUrl.value.trim();
+            const logo = inputLogo.value.trim();
 
             if (!name || !stream) {
                 showToast("Заповніть назву та URL");
                 return;
             }
 
-            customStations.push({ name, stream, logo });
-            stationsList.push({ name, stream, logo });
+            if (editingOriginalStream !== null) {
+                // Режим збереження правки
+                let customIndex = customStations.findIndex(s => s.stream === editingOriginalStream);
+                if (customIndex !== -1) {
+                    customStations[customIndex] = { name, stream, logo };
+                }
+
+                let listIndex = stationsList.findIndex(s => s.stream === editingOriginalStream);
+                if (listIndex !== -1) {
+                    stationsList[listIndex] = { name, stream, logo };
+                }
+
+                if (currentIndex !== -1 && stationsList[currentIndex]?.stream === stream) {
+                    statusText.innerText = name.toUpperCase();
+                    updateDisplayVisuals({ name, stream, logo });
+                }
+
+                showToast("Зміни збережено!");
+                resetForm();
+            } else {
+                // Режим додавання нової
+                customStations.push({ name, stream, logo });
+                stationsList.push({ name, stream, logo });
+                showToast("Станцію додано!");
+                inputName.value = '';
+                inputUrl.value = '';
+                inputLogo.value = '';
+            }
 
             localStorage.setItem('custom_radio_stations', JSON.stringify(customStations));
             localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
-
-            document.getElementById('custom-name').value = '';
-            document.getElementById('custom-url').value = '';
-            document.getElementById('custom-logo').value = '';
-            showToast("Станцію додано!");
             renderPlaylist();
         });
 
         window.deleteCustomStation = function(streamUrl) {
+            if (editingOriginalStream === streamUrl) {
+                resetForm();
+            }
             customStations = customStations.filter(s => s.stream !== streamUrl);
             stationsList = stationsList.filter(s => s.stream !== streamUrl);
 

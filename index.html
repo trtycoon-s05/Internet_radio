@@ -220,7 +220,7 @@
         .station-item {
             padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
-            transition: opacity 0.2s, background-color 0.2s;
+            transition: background-color 0.2s;
         }
         .station-item:last-child { border-bottom: none; }
         .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
@@ -238,6 +238,14 @@
         .actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
         .drag-handle:active { cursor: grabbing; }
+        .move-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 2px 4px; display: none; }
+        
+        /* Показуємо ручку мишки на ПК, а стрілочки на мобільних / тач-пристроях */
+        @media (pointer: coarse) {
+            .drag-handle { display: none; }
+            .move-btn { display: inline-block; }
+        }
+
         .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
         .btn-fav.active { opacity: 1; color: #ffca28; }
         .btn-edit { color: #3b82f6; font-size: 13px; cursor: pointer; padding: 4px; }
@@ -328,7 +336,7 @@
             <input type="range" id="volume-slider" min="0" max="100" value="70">
         </div>
 
-        <h3>Список радіостанцій (тягніть за ⋮⋮)</h3>
+        <h3>Список радіостанцій</h3>
         <div class="playlist" id="playlist"></div>
 
         <h3 id="form-heading">Додати станцію</h3>
@@ -436,7 +444,8 @@
         let currentIndex = -1;
         let isPlaying = false;
         let spectrumInterval = null;
-        let editingOriginalStream = null; // Поточний URL станції, що редагується
+        let editingOriginalStream = null;
+        let draggedIndex = null;
 
         const player = document.getElementById('audio-player');
         const statusText = document.getElementById('status');
@@ -600,7 +609,23 @@
             renderPlaylist();
         }
 
-        let draggedIndex = null;
+        window.moveStation = function(index, direction, event) {
+            event.stopPropagation();
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= stationsList.length) return;
+
+            const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
+
+            const moved = stationsList.splice(index, 1)[0];
+            stationsList.splice(newIndex, 0, moved);
+
+            if (activeStream) {
+                currentIndex = stationsList.findIndex(s => s.stream === activeStream);
+            }
+
+            localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
+            renderPlaylist();
+        };
 
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
@@ -619,7 +644,9 @@
 
                 item.innerHTML = `
                     <div class="actions">
-                        <span class="drag-handle" title="Перетягнути">⋮⋮</span>
+                        <span class="drag-handle" title="Перетягнути мишкою">⋮⋮</span>
+                        <button class="move-btn" onclick="moveStation(${index}, -1, event)" title="Вгору">▲</button>
+                        <button class="move-btn" onclick="moveStation(${index}, 1, event)" title="Вниз">▼</button>
                     </div>
                     <div class="station-info">
                         ${logoContent}
@@ -633,6 +660,7 @@
                     </div>
                 `;
 
+                // Drag & Drop мишкою (для ПК / десктопів)
                 item.addEventListener('dragstart', () => {
                     draggedIndex = index;
                     setTimeout(() => item.classList.add('dragging'), 0);
@@ -666,6 +694,7 @@
 
                 item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
 
+                // Захист скролу для iPhone
                 let startX = 0, startY = 0;
                 item.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
@@ -819,7 +848,6 @@
             addBtn.innerText = "💾 ЗБЕРЕГТИ ЗМІНИ";
             cancelEditBtn.classList.add('show');
             
-            // Плавний проскрол до форми редагування
             formHeading.scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -846,7 +874,6 @@
             }
 
             if (editingOriginalStream !== null) {
-                // Режим збереження правки
                 let customIndex = customStations.findIndex(s => s.stream === editingOriginalStream);
                 if (customIndex !== -1) {
                     customStations[customIndex] = { name, stream, logo };
@@ -865,7 +892,6 @@
                 showToast("Зміни збережено!");
                 resetForm();
             } else {
-                // Режим додавання нової
                 customStations.push({ name, stream, logo });
                 stationsList.push({ name, stream, logo });
                 showToast("Станцію додано!");

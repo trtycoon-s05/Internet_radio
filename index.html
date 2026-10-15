@@ -674,25 +674,35 @@
                     artwork: station && station.logo ? [{ src: station.logo, sizes: '512x512', type: 'image/jpeg' }] : []
                 });
 
-                navigator.mediaSession.setActionHandler('previoustrack', () => {
-                    handlePrev(new Event('click'));
-                });
+                try {
+                    navigator.mediaSession.setActionHandler('previoustrack', () => {
+                        if (!stationsList.length) return;
+                        let next = currentIndex - 1 < 0 ? stationsList.length - 1 : currentIndex - 1;
+                        playStation(next);
+                    });
 
-                navigator.mediaSession.setActionHandler('nexttrack', () => {
-                    handleNext(new Event('click'));
-                });
+                    navigator.mediaSession.setActionHandler('nexttrack', () => {
+                        if (!stationsList.length) return;
+                        let next = currentIndex + 1 >= stationsList.length ? 0 : currentIndex + 1;
+                        playStation(next);
+                    });
 
-                navigator.mediaSession.setActionHandler('play', () => {
-                    player.play();
-                    isPlaying = true;
-                    startSpectrumAnimation();
-                });
+                    navigator.mediaSession.setActionHandler('play', () => {
+                        if (currentIndex !== -1) {
+                            player.play();
+                            isPlaying = true;
+                            startSpectrumAnimation();
+                        }
+                    });
 
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    player.pause();
-                    isPlaying = false;
-                    stopSpectrumAnimation();
-                });
+                    navigator.mediaSession.setActionHandler('pause', () => {
+                        player.pause();
+                        isPlaying = false;
+                        stopSpectrumAnimation();
+                    });
+                } catch (e) {
+                    console.log("MediaSession actions not supported", e);
+                }
             }
         }
 

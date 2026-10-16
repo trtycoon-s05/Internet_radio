@@ -208,6 +208,16 @@
         .vol-box input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
         h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 6px 0; text-align: left; }
+        
+        .collapsible-header {
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            user-select: none; padding: 2px 0;
+        }
+        .collapsible-header span.arrow {
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+        .add-box.collapsed { display: none; }
 
         .playlist {
             background-color: var(--bg-card); border-radius: 12px; 
@@ -240,7 +250,6 @@
         .drag-handle:active { cursor: grabbing; }
         .move-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 2px 4px; display: none; }
         
-        /* Показуємо ручку мишки на ПК, а стрілочки на мобільних / тач-пристроях */
         @media (pointer: coarse) {
             .drag-handle { display: none; }
             .move-btn { display: inline-block; }
@@ -339,8 +348,11 @@
         <h3>Список радіостанцій</h3>
         <div class="playlist" id="playlist"></div>
 
-        <h3 id="form-heading">Додати станцію</h3>
-        <div class="add-box">
+        <h3 class="collapsible-header" id="form-toggle-header">
+            <span id="form-heading">Додати станцію</span>
+            <span class="arrow" id="form-arrow">▼ Згорнути</span>
+        </h3>
+        <div class="add-box" id="add-box-content">
             <input type="text" id="custom-name" placeholder="Назва станції">
             <input type="url" id="custom-url" placeholder="URL потоку (https://...)">
             <input type="url" id="custom-logo" placeholder="URL логотипу (необов'язково)">
@@ -381,6 +393,20 @@
 
         createPixelSpectrum(leftSpectrumEl, leftCols);
         createPixelSpectrum(rightSpectrumEl, rightCols);
+
+        // Згортання / розгортання форми додавання
+        const formToggleHeader = document.getElementById('form-toggle-header');
+        const addBoxContent = document.getElementById('add-box-content');
+        const formArrow = document.getElementById('form-arrow');
+
+        formToggleHeader.addEventListener('click', () => {
+            addBoxContent.classList.toggle('collapsed');
+            if (addBoxContent.classList.contains('collapsed')) {
+                formArrow.innerText = '▲ Розгорнути';
+            } else {
+                formArrow.innerText = '▼ Згорнути';
+            }
+        });
 
         const customEditor = document.getElementById('custom-editor');
         const screenLogoContainer = document.getElementById('screen-logo-container');
@@ -660,7 +686,6 @@
                     </div>
                 `;
 
-                // Drag & Drop мишкою (для ПК / десктопів)
                 item.addEventListener('dragstart', () => {
                     draggedIndex = index;
                     setTimeout(() => item.classList.add('dragging'), 0);
@@ -694,7 +719,6 @@
 
                 item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
 
-                // Захист скролу для iPhone
                 let startX = 0, startY = 0;
                 item.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
@@ -736,28 +760,15 @@
                 });
 
                 try {
-                    navigator.mediaSession.setActionHandler('previoustrack', () => {
-                        handlePrev(new Event('click'));
-                    });
-
-                    navigator.mediaSession.setActionHandler('nexttrack', () => {
-                        handleNext(new Event('click'));
-                    });
-
-                    navigator.mediaSession.setActionHandler('seekbackward', () => {
-                        handlePrev(new Event('click'));
-                    });
-
-                    navigator.mediaSession.setActionHandler('seekforward', () => {
-                        handleNext(new Event('click'));
-                    });
-
+                    navigator.mediaSession.setActionHandler('previoustrack', () => handlePrev(new Event('click')));
+                    navigator.mediaSession.setActionHandler('nexttrack', () => handleNext(new Event('click')));
+                    navigator.mediaSession.setActionHandler('seekbackward', () => handlePrev(new Event('click')));
+                    navigator.mediaSession.setActionHandler('seekforward', () => handleNext(new Event('click')));
                     navigator.mediaSession.setActionHandler('play', () => {
                         player.play();
                         isPlaying = true;
                         startSpectrumAnimation();
                     });
-
                     navigator.mediaSession.setActionHandler('pause', () => {
                         player.pause();
                         isPlaying = false;
@@ -848,7 +859,9 @@
             addBtn.innerText = "💾 ЗБЕРЕГТИ ЗМІНИ";
             cancelEditBtn.classList.add('show');
             
-            formHeading.scrollIntoView({ behavior: 'smooth' });
+            addBoxContent.classList.remove('collapsed');
+            formArrow.innerText = '▼ Згорнути';
+            formToggleHeader.scrollIntoView({ behavior: 'smooth' });
         };
 
         function resetForm() {

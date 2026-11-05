@@ -438,7 +438,7 @@
             { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_320", logo: "https://slukhay.com/uploads/2026/3/9/05be7ad9-6e41-4bcd-82f9-680db9802a8e.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq", logo: "https://slukhay.com/uploads/2025/6/26/84ac3186-255b-4331-a289-7c48923dc1f4.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Перець ФМ", stream: "https://radio.perec.fm/radio-stilnoe?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/c3faf022-3c69-4ab1-a18b-31cef76465fe.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо ORANGE RADIO", stream: "https://stream.zeno.fm/5ez2dnpgixktv", logo: "https://cdn.radoxo.com/images/ukraine/orange-radio-ukraine.webp?v=1791194402" },
+            { name: "Orange Radio Ukraine", stream: "https://stream.zeno.fm/5ez2dnpgixktv", logo: "https://cdn.radoxo.com/images/ukraine/orange-radio-ukraine.webp?v=1791194402" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1", logo: "https://slukhay.com/uploads/2026/5/21/c6b6edf7-94cf-436c-9c05-c32584460bc3.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/9/16/357f0be7-4ecf-4a44-a3c2-656e8b0224dd.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/13581b85-d113-45fa-8784-12c11c3640b7.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
@@ -463,21 +463,34 @@
         let stationsList = [];
         let savedOrder = JSON.parse(localStorage.getItem('radio_stations_order'));
         
+        // ВІДНОВЛЕННЯ ТА ФОРМУВАННЯ СПИСКУ СТАНЦІЙ:
+        // Спочатку завжди беремо вбудований перелік у точній послідовності defaultStations
         let allAvailableMap = new Map();
         [...defaultStations, ...customStations].forEach(s => {
             if (s && s.stream) allAvailableMap.set(s.stream, s);
         });
 
         if (savedOrder && savedOrder.length > 0) {
+            // 1. Формуємо дефолтні станції в їхній початковій послідовності з коду
+            defaultStations.forEach(defS => {
+                if (allAvailableMap.has(defS.stream)) {
+                    stationsList.push(allAvailableMap.get(defS.stream));
+                    allAvailableMap.delete(defS.stream);
+                }
+            });
+
+            // 2. Додаємо кастомні/збережені станції у порядку, у якому користувач їх впорядковував
             savedOrder.forEach(s => {
                 if (s && s.stream && allAvailableMap.has(s.stream)) {
                     stationsList.push(allAvailableMap.get(s.stream));
                     allAvailableMap.delete(s.stream);
                 }
             });
+
+            // 3. Додаємо будь-які остаточні залишки
             allAvailableMap.forEach(s => stationsList.push(s));
         } else {
-            stationsList = Array.from(allAvailableMap.values());
+            stationsList = [...defaultStations, ...customStations];
         }
         
         if (stationsList.length === 0) {
@@ -965,7 +978,6 @@
         const importBtn = document.getElementById('import-btn');
         const importFileInput = document.getElementById('import-file-input');
 
-        // Генерируємо та завантажуємо M3U файл
         exportBtn.addEventListener('click', () => {
             let m3uContent = "#EXTM3U\n";
             stationsList.forEach(s => {
@@ -995,7 +1007,6 @@
             importFileInput.click();
         });
 
-        // Парсинг завантаженого файлу (M3U або JSON)
         importFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1006,7 +1017,6 @@
                 let parsedStations = [];
 
                 if (content.startsWith('#EXTM3U') || file.name.endsWith('.m3u') || file.name.endsWith('.m3u8')) {
-                    // Обробка M3U
                     const lines = content.split(/\r?\n/);
                     let currentName = "";
                     let currentLogo = "";
@@ -1014,12 +1024,10 @@
                     lines.forEach(line => {
                         line = line.trim();
                         if (line.startsWith('#EXTINF:')) {
-                            // Отримуємо назву станції після коми
                             const commaIdx = line.indexOf(',');
                             if (commaIdx !== -1) {
                                 currentName = line.substring(commaIdx + 1).trim();
                             }
-                            // Отримуємо логотип з атрибуту tvg-logo="..." якщо він є
                             const logoMatch = line.match(/tvg-logo="([^"]+)"/i);
                             if (logoMatch) {
                                 currentLogo = logoMatch[1];
@@ -1035,7 +1043,6 @@
                         }
                     });
                 } else {
-                    // Обробка JSON
                     try {
                         const importedData = JSON.parse(content);
                         if (Array.isArray(importedData)) {
@@ -1054,7 +1061,6 @@
                     return;
                 }
 
-                // Оновлюємо станції та зберігаємо
                 stationsList = parsedStations;
                 customStations = parsedStations.filter(s => !defaultStations.some(def => def.stream === s.stream));
 

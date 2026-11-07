@@ -104,7 +104,7 @@
             display: flex; flex-direction: column; min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
-        .container { max-width: 480px; margin: 0 auto; width: 100%; }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; }
 
         .skin-selector {
             display: flex; justify-content: space-between; align-items: center;
@@ -207,7 +207,7 @@
         .vol-box label { font-size: 11px; font-weight: bold; color: var(--text-muted); white-space: nowrap; }
         .vol-box input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
-        h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 6px 0; text-align: left; }
+        h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 0 0 8px 0; text-align: left; }
         
         .collapsible-header {
             display: flex; justify-content: space-between; align-items: center; cursor: pointer;
@@ -219,46 +219,134 @@
         }
         .add-box.collapsed { display: none; }
 
-        .playlist {
-            background-color: var(--bg-card); border-radius: 12px; 
-            overflow-y: auto; -webkit-overflow-scrolling: touch;
-            text-align: left; border: 1px solid var(--border-color); 
-            max-height: 32vh; margin-bottom: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            touch-action: pan-y;
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            max-height: 42vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px;
+            margin-bottom: 12px;
         }
-        .station-item {
-            padding: 10px 12px; border-bottom: 1px solid var(--border-color); cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px; gap: 8px;
-            transition: background-color 0.2s;
-        }
-        .station-item:last-child { border-bottom: none; }
-        .station-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: bold; }
-        .station-item.dragging { opacity: 0.4; background-color: var(--border-color); }
-        
-        .station-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; pointer-events: none; }
-        .station-logo-mini {
-            width: 26px; height: 26px; border-radius: 6px; object-fit: cover; background: var(--bg-input);
-            display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+
+        .station-tile {
+            background-color: var(--bg-card);
             border: 1px solid var(--border-color);
-        }
-        .station-logo-mini img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
-        .station-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        .actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 2px; font-weight: bold; }
-        .drag-handle:active { cursor: grabbing; }
-        .move-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 2px 4px; display: none; }
-        
-        @media (pointer: coarse) {
-            .drag-handle { display: none; }
-            .move-btn { display: inline-block; }
+            border-radius: 12px;
+            padding: 8px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
 
-        .btn-fav { cursor: pointer; opacity: 0.3; font-size: 16px; padding: 4px; }
-        .btn-fav.active { opacity: 1; color: #ffca28; }
-        .btn-edit { color: #3b82f6; font-size: 13px; cursor: pointer; padding: 4px; }
-        .btn-del { color: var(--btn-stop-color); font-size: 14px; opacity: 0.8; cursor: pointer; padding: 4px; }
+        .station-tile:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .station-tile:active {
+            transform: scale(0.96);
+        }
+
+        .station-tile.active {
+            background-color: var(--accent-soft);
+            border: 1.5px solid var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .tile-fav {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            font-size: 14px;
+            opacity: 0.3;
+            cursor: pointer;
+            padding: 2px;
+            z-index: 2;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .tile-fav.active {
+            opacity: 1;
+            color: #ffca28;
+        }
+
+        .tile-fav:hover {
+            transform: scale(1.2);
+        }
+
+        .tile-actions {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: flex;
+            gap: 2px;
+            z-index: 2;
+        }
+
+        .tile-btn {
+            background: rgba(0,0,0,0.6);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tile-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .tile-logo {
+            width: 100%;
+            height: 100px;
+            border-radius: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .tile-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            border-radius: 10px;
+        }
+
+        .tile-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+            margin-top: 6px;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .tile-playing-icon {
+            font-size: 10px;
+            color: var(--accent);
+            margin-top: 4px;
+            pointer-events: none;
+            font-weight: bold;
+        }
 
         .add-box {
             background: var(--bg-card); padding: 10px; border-radius: 12px;
@@ -352,7 +440,7 @@
         </div>
 
         <h3>Список радіостанцій</h3>
-        <div class="playlist" id="playlist"></div>
+        <div class="playlist-grid" id="playlist"></div>
 
         <h3 class="collapsible-header" id="form-toggle-header">
             <span id="form-heading">Додати станцію</span>
@@ -435,26 +523,31 @@
         ];
 
         const defaultStations = [
-            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_320", logo: "https://slukhay.com/uploads/2026/3/9/05be7ad9-6e41-4bcd-82f9-680db9802a8e.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо ТРЕК", stream: "https://cast.radiotrek.rv.ua:8433/MP3_128", logo: "https://slukhay.com/uploads/2026/3/9/05be7ad9-6e41-4bcd-82f9-680db9802a8e.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Шлягер ФМ", stream: "https://cast.brg.ua/shanson_main_public_mp3_hq", logo: "https://slukhay.com/uploads/2025/6/26/84ac3186-255b-4331-a289-7c48923dc1f4.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Перець ФМ", stream: "https://radio.perec.fm/radio-stilnoe?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/c3faf022-3c69-4ab1-a18b-31cef76465fe.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Orange Radio Ukraine", stream: "https://stream.zeno.fm/5ez2dnpgixktv", logo: "https://cdn.radoxo.com/images/ukraine/orange-radio-ukraine.webp?v=1791194402" },
             { name: "Радіо ЗАБАВА", stream: "https://lux.radio.tvstitch.com/radio-zabava-sd?npa=1", logo: "https://slukhay.com/uploads/2026/5/21/c6b6edf7-94cf-436c-9c05-c32584460bc3.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ", stream: "https://lux.radio.tvstitch.com/kyiv/lux_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/9/16/357f0be7-4ecf-4a44-a3c2-656e8b0224dd.png?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/13581b85-d113-45fa-8784-12c11c3640b7.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd", logo: "https://slukhay.com/uploads/2026/2/3/0fc2953e-4564-4e15-8368-4600ac738071.png?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/0e404084-9364-4afb-a3ee-709d3ea0fcae.png?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/5/963f96f1-039c-4bdd-b2af-8d64975f8123.png?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/17d5d5ad-928a-4dc1-aed5-f86babdea9b4.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ - Сучасні хіти", stream: "https://icecast.luxnet.ua/suchasni-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/a1200b2f-4914-4430-81cf-d6d4b6bf6f73.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ - Тільки люкс хіти", stream: "https://lux.radio.tvstitch.com/tilky-hity-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/22/e690a727-199f-4112-bab8-8711fedb98fc.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Українські хіти", stream: "https://icecast.luxnet.ua/ukrayinski-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/0e404084-9364-4afb-a3ee-709d3ea0fcae.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Romantic", stream: "https://lux.radio.tvstitch.com/lux-fm-romantic-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/13581b85-d113-45fa-8784-12c11c3640b7.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Chill & Relax", stream: "https://icecast.luxnet.ua/chill-sd", logo: "https://slukhay.com/uploads/2026/2/3/0fc2953e-4564-4e15-8368-4600ac738071.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Золоті хіти", stream: "https://lux.radio.tvstitch.com/zoloti-hiti-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/3/17d5d5ad-928a-4dc1-aed5-f86babdea9b4.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Люкс ФМ - SPORT", stream: "https://lux.radio.tvstitch.com/lux-fm-sport-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/8/6e3b3fe4-de03-451a-b56f-78795766c2eb.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - Ibiza", stream: "https://lux.radio.tvstitch.com/lux-fm-ibiza-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/9/38d01b18-6bb6-4e12-8ef5-78aa575df4be.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо Люкс ФМ - DANCE", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/6/5/963f96f1-039c-4bdd-b2af-8d64975f8123.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Максимум", stream: "https://lux.radio.tvstitch.com/kyiv/max_adv_sd?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/917d6303-c472-47ee-bf53-55b79e65dc48.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "ХІТ ФМ", stream: "https://tavr.tvstitch.com/HitFM?npa=1", logo: "https://slukhay.com/uploads/2026/4/22/9f130198-c035-4576-9975-6d84ecbd3d6f.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Авторадіо", stream: "https://cast.mediaonline.net.ua/avtoradio", logo: "https://slukhay.com/uploads/2025/6/26/d77c72e5-1065-4ed0-9b50-2191604e8f12.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Radio Прищепкін TOP40 UA", stream: "https://aac.prischepkin.com:8443/radio?npa=1", logo: "https://slukhay.com/uploads/2026/3/18/955f4d5f-7fe9-4819-be5c-2c238a691564.png?w=256&h=256&fit=cover&output=webp&q=85" },
             { name: "Радіо Dance FM", stream: "https://lux.radio.tvstitch.com/dance-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/7/24/7ad86781-535a-40b0-99f5-0d673a79618e.jpeg?w=256&h=256&fit=cover&output=webp&q=85" },
-            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/10/ff2ae5a4-7b52-42a0-8722-7f418062b840.png?w=256&h=256&fit=cover&output=webp&q=85" }
+            { name: "Радіо FITNESS FM", stream: "https://lux.radio.tvstitch.com/fitness-fm-sd?npa=1", logo: "https://slukhay.com/uploads/2026/2/10/ff2ae5a4-7b52-42a0-8722-7f418062b840.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо KISS FM Ukraine", stream: "https://tavr.tvstitch.com/KissFM", logo: "https://cdn.radoxo.com/images/ukraine/kiss-fm.webp?v=1794000387" },
+            { name: "Радіо NRJ Україна", stream: "https://cast.mediaonline.net.ua/nrj320?npa=1", logo: "https://slukhay.com/uploads/2025/6/26/343ef862-dbc0-4e2f-a632-a07aa40dcdeb.jpg?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Наше Радіо", stream: "https://online.nasheradio.ua/NasheRadio?npa=1", logo: "https://slukhay.com/uploads/2026/4/22/d48faa63-6c85-484d-af27-e6c67d6cd611.png?w=256&h=256&fit=cover&output=webp&q=85" },
+            { name: "Радіо МЕЛОДІЯ", stream: "https://tavr.tvstitch.com/MelodiaFM?npa=1", logo: "https://slukhay.com/uploads/2026/4/22/1c819463-dc47-4f00-8356-dfa0d5349e32.png?w=256&h=256&fit=cover&output=webp&q=85" }
         ];
 
         let customStations = JSON.parse(localStorage.getItem('custom_radio_stations')) || [];
@@ -463,15 +556,12 @@
         let stationsList = [];
         let savedOrder = JSON.parse(localStorage.getItem('radio_stations_order'));
         
-        // ВІДНОВЛЕННЯ ТА ФОРМУВАННЯ СПИСКУ СТАНЦІЙ:
-        // Спочатку завжди беремо вбудований перелік у точній послідовності defaultStations
         let allAvailableMap = new Map();
         [...defaultStations, ...customStations].forEach(s => {
             if (s && s.stream) allAvailableMap.set(s.stream, s);
         });
 
         if (savedOrder && savedOrder.length > 0) {
-            // 1. Формуємо дефолтні станції в їхній початковій послідовності з коду
             defaultStations.forEach(defS => {
                 if (allAvailableMap.has(defS.stream)) {
                     stationsList.push(allAvailableMap.get(defS.stream));
@@ -479,7 +569,6 @@
                 }
             });
 
-            // 2. Додаємо кастомні/збережені станції у порядку, у якому користувач їх впорядковував
             savedOrder.forEach(s => {
                 if (s && s.stream && allAvailableMap.has(s.stream)) {
                     stationsList.push(allAvailableMap.get(s.stream));
@@ -487,7 +576,6 @@
                 }
             });
 
-            // 3. Додаємо будь-які остаточні залишки
             allAvailableMap.forEach(s => stationsList.push(s));
         } else {
             stationsList = [...defaultStations, ...customStations];
@@ -503,7 +591,6 @@
         let isPlaying = false;
         let spectrumInterval = null;
         let editingOriginalStream = null;
-        let draggedIndex = null;
 
         const player = document.getElementById('audio-player');
         const statusText = document.getElementById('status');
@@ -667,110 +754,56 @@
             renderPlaylist();
         }
 
-        window.moveStation = function(index, direction, event) {
-            event.stopPropagation();
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= stationsList.length) return;
-
-            const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
-
-            const moved = stationsList.splice(index, 1)[0];
-            stationsList.splice(newIndex, 0, moved);
-
-            if (activeStream) {
-                currentIndex = stationsList.findIndex(s => s.stream === activeStream);
-            }
-
-            localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
-            renderPlaylist();
-        };
-
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
             stationsList.forEach((station, index) => {
-                const item = document.createElement('div');
-                item.className = 'station-item' + (index === currentIndex ? ' active' : '');
-                item.setAttribute('draggable', 'true');
-                item.dataset.index = index;
-
+                const tile = document.createElement('div');
+                const isActive = index === currentIndex;
+                tile.className = 'station-tile' + (isActive ? ' active' : '');
+                
                 const isFav = favorites.includes(station.stream);
                 const isCustom = customStations.some(s => s.stream === station.stream);
 
-                const logoContent = station.logo 
-                    ? `<img src="${station.logo}" class="station-logo-mini" onerror="this.outerHTML='<div class=\'station-logo-mini\'>📻</div>'">`
-                    : `<div class="station-logo-mini">📻</div>`;
+                const logoMarkup = station.logo 
+                    ? `<img src="${station.logo}" onerror="this.outerHTML='📻'">`
+                    : `📻`;
 
-                item.innerHTML = `
-                    <div class="actions">
-                        <span class="drag-handle" title="Перетягнути мишкою">⋮⋮</span>
-                        <button class="move-btn" onclick="moveStation(${index}, -1, event)" title="Вгору">▲</button>
-                        <button class="move-btn" onclick="moveStation(${index}, 1, event)" title="Вниз">▼</button>
-                    </div>
-                    <div class="station-info">
-                        ${logoContent}
-                        <span class="station-name">${station.name}</span>
-                    </div>
-                    <div class="actions">
-                        <span class="btn-fav ${isFav ? 'active' : ''}">★</span>
-                        ${isCustom ? `<span class="btn-edit" onclick="event.stopPropagation(); startEditStation('${station.stream}')" title="Редагувати">✏️</span>` : ''}
-                        ${isCustom ? `<span class="btn-del" onclick="event.stopPropagation(); deleteCustomStation('${station.stream}')" title="Видалити">✖</span>` : ''}
-                        <span>${index === currentIndex ? '🔊' : '▶'}</span>
-                    </div>
+                tile.innerHTML = `
+                    <span class="tile-fav ${isFav ? 'active' : ''}">★</span>
+                    ${isCustom ? `
+                        <div class="tile-actions">
+                            <span class="tile-btn btn-edit" title="Редагувати">✏️</span>
+                            <span class="tile-btn btn-del" title="Видалити">✖</span>
+                        </div>
+                    ` : ''}
+                    <div class="tile-logo">${logoMarkup}</div>
+                    <div class="tile-name">${station.name}</div>
+                    ${isActive ? `<div class="tile-playing-icon">🔊 СЛУХАЄМО</div>` : ''}
                 `;
 
-                item.addEventListener('dragstart', () => {
-                    draggedIndex = index;
-                    setTimeout(() => item.classList.add('dragging'), 0);
-                });
+                const favBtn = tile.querySelector('.tile-fav');
+                favBtn.addEventListener('click', (e) => toggleFavorite(station.stream, e));
 
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('dragging');
-                    draggedIndex = null;
-                    localStorage.setItem('radio_stations_order', JSON.stringify(stationsList));
-                    renderPlaylist();
-                });
-
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                });
-
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (draggedIndex === null || draggedIndex === index) return;
-
-                    const activeStream = currentIndex !== -1 ? stationsList[currentIndex].stream : null;
+                if (isCustom) {
+                    const editBtn = tile.querySelector('.btn-edit');
+                    const delBtn = tile.querySelector('.btn-del');
                     
-                    const movedItem = stationsList.splice(draggedIndex, 1)[0];
-                    stationsList.splice(index, 0, movedItem);
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        startEditStation(station.stream);
+                    });
+                    
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteCustomStation(station.stream);
+                    });
+                }
 
-                    if (activeStream) {
-                        currentIndex = stationsList.findIndex(s => s.stream === activeStream);
-                    }
-                    draggedIndex = index;
-                });
-
-                item.querySelector('.btn-fav').addEventListener('click', (e) => toggleFavorite(station.stream, e));
-
-                let startX = 0, startY = 0;
-                item.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                }, { passive: true });
-
-                item.addEventListener('touchend', (e) => {
-                    let endX = e.changedTouches[0].clientX;
-                    let endY = e.changedTouches[0].clientY;
-                    if (Math.abs(endX - startX) < 8 && Math.abs(endY - startY) < 8) {
-                        e.preventDefault();
-                        playStation(index);
-                    }
-                });
-
-                item.addEventListener('click', () => {
+                tile.addEventListener('click', () => {
                     playStation(index);
                 });
                 
-                playlistContainer.appendChild(item);
+                playlistContainer.appendChild(tile);
             });
         }
 
@@ -973,7 +1006,6 @@
             showToast("Станцію видалено");
         };
 
-        // --- БЛОК ІМПОРТУ ТА ЕКСПОРТУ В M3U ТА JSON ---
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
         const importFileInput = document.getElementById('import-file-input');
